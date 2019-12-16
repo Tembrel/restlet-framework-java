@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -104,6 +95,38 @@ public class Metadata extends SaxRepresentation {
     }
 
     /**
+     * Returns the complectType that corresponds to a given entity class.
+     * 
+     * @param entityClass
+     *            The entity class.
+     * @return The ComplexType that corresponds to a given entity class.
+     */
+    public ComplexType getComplexType(Class<?> entityClass) {
+        ComplexType result = null;
+
+        // Try to match the entity class names (without package);
+        String className = entityClass.getName();
+        int index = className.lastIndexOf(".");
+        if (index != -1) {
+            className = className.substring(index + 1);
+        }
+
+        for (Iterator<Schema> iec = getSchemas().iterator(); result == null
+                && iec.hasNext();) {
+            Schema schema = iec.next();
+            for (Iterator<ComplexType> ies = schema.getComplexTypes()
+                    .iterator(); result == null && ies.hasNext();) {
+                ComplexType type = ies.next();
+                if (type.getClassName().equals(className)) {
+                    result = type;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Returns the list of entity containers.
      * 
      * @return The list of entity containers.
@@ -176,38 +199,6 @@ public class Metadata extends SaxRepresentation {
     }
 
     /**
-     * Returns the complectType that corresponds to a given entity class.
-     * 
-     * @param entityClass
-     *            The entity class.
-     * @return The ComplexType that corresponds to a given entity class.
-     */
-    public ComplexType getComplexType(Class<?> entityClass) {
-        ComplexType result = null;
-
-        // Try to match the entity class names (without package);
-        String className = entityClass.getName();
-        int index = className.lastIndexOf(".");
-        if (index != -1) {
-            className = className.substring(index + 1);
-        }
-
-        for (Iterator<Schema> iec = getSchemas().iterator(); result == null
-                && iec.hasNext();) {
-            Schema schema = iec.next();
-            for (Iterator<ComplexType> ies = schema.getComplexTypes()
-                    .iterator(); result == null && ies.hasNext();) {
-                ComplexType type = ies.next();
-                if (type.getClassName().equals(className)) {
-                    result = type;
-                }
-            }
-        }
-
-        return result;
-    }
-
-    /**
      * Returns the String representation of the value of the key of the given
      * entity that should be used in all URIs.
      * 
@@ -254,8 +245,8 @@ public class Metadata extends SaxRepresentation {
                         Method getter = entity.getClass().getDeclaredMethod(
                                 getterName, (Class[]) null);
                         Object value = getter.invoke(entity, (Object[]) null);
-                        String strValue = TypeUtils.toEdmKey(value, key
-                                .getType());
+                        String strValue = TypeUtils.toEdmKey(value,
+                                key.getType());
                         if (strValue != null) {
                             result.append(strValue);
                         } else {

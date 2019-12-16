@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -45,13 +36,14 @@ import org.restlet.representation.Variant;
 import org.restlet.resource.Resource;
 
 /**
- * Converter between the JSON, JSON Smile, CSV, XML, YAML and Representation
+ * Converter between the JSON, JSON Smile, CBOR, CSV, XML, YAML and Representation
  * classes based on Jackson.
  * 
  * @author Jerome Louvel
  * @author Thierry Boileau
  */
 public class JacksonConverter extends ConverterHelper {
+    // [ifndef android] instruction
     /** Variant with media type application/xml. */
     private static final VariantInfo VARIANT_APPLICATION_XML = new VariantInfo(
             MediaType.APPLICATION_XML);
@@ -59,6 +51,10 @@ public class JacksonConverter extends ConverterHelper {
     /** Variant with media type application/yaml. */
     private static final VariantInfo VARIANT_APPLICATION_YAML = new VariantInfo(
             MediaType.APPLICATION_YAML);
+    
+    /** Variant with media type application/cbor. */
+    private static final VariantInfo VARIANT_APPLICATION_CBOR = new VariantInfo(
+            MediaType.APPLICATION_CBOR);
 
     /** Variant with media type application/json. */
     private static final VariantInfo VARIANT_JSON = new VariantInfo(
@@ -72,6 +68,7 @@ public class JacksonConverter extends ConverterHelper {
     private static final VariantInfo VARIANT_TEXT_CSV = new VariantInfo(
             MediaType.TEXT_CSV);
 
+    // [ifndef android] instruction
     /** Variant with media type text/xml. */
     private static final VariantInfo VARIANT_TEXT_XML = new VariantInfo(
             MediaType.TEXT_XML);
@@ -128,7 +125,10 @@ public class JacksonConverter extends ConverterHelper {
         if (source != null) {
             result = addVariant(result, VARIANT_JSON);
             result = addVariant(result, VARIANT_JSON_SMILE);
+            result = addVariant(result, VARIANT_APPLICATION_CBOR);
+            // [ifndef android] instruction
             result = addVariant(result, VARIANT_APPLICATION_XML);
+            // [ifndef android] instruction
             result = addVariant(result, VARIANT_TEXT_XML);
             result = addVariant(result, VARIANT_APPLICATION_YAML);
             result = addVariant(result, VARIANT_TEXT_YAML);
@@ -151,11 +151,14 @@ public class JacksonConverter extends ConverterHelper {
         return (variant != null)
                 && (VARIANT_JSON.isCompatible(variant)
                         || VARIANT_JSON_SMILE.isCompatible(variant)
+                        || VARIANT_APPLICATION_CBOR.isCompatible(variant)
+                        // [ifndef android] line
                         || VARIANT_APPLICATION_XML.isCompatible(variant)
+                        // [ifndef android] line
                         || VARIANT_TEXT_XML.isCompatible(variant)
                         || VARIANT_APPLICATION_YAML.isCompatible(variant)
                         || VARIANT_TEXT_YAML.isCompatible(variant) || VARIANT_TEXT_CSV
-                        .isCompatible(variant));
+                            .isCompatible(variant));
     }
 
     @Override
@@ -245,7 +248,10 @@ public class JacksonConverter extends ConverterHelper {
             Class<T> entity) {
         updatePreferences(preferences, MediaType.APPLICATION_JSON, 1.0F);
         updatePreferences(preferences, MediaType.APPLICATION_JSON_SMILE, 1.0F);
+        updatePreferences(preferences, MediaType.APPLICATION_CBOR, 1.0F);
+        // [ifndef android] instruction
         updatePreferences(preferences, MediaType.APPLICATION_XML, 1.0F);
+        // [ifndef android] instruction
         updatePreferences(preferences, MediaType.TEXT_XML, 1.0F);
         updatePreferences(preferences, MediaType.APPLICATION_YAML, 1.0F);
         updatePreferences(preferences, MediaType.TEXT_YAML, 1.0F);

@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -37,8 +28,8 @@ package org.restlet.ext.jaxrs.internal.exceptions;
  * A RequestHandledException is thrown when an this request is already handled,
  * for example because of an handled exception resulting in an error while
  * method invocation. The Exception or whatever was handled and the necessary
- * data in {@link org.restlet.Response} were set, so that the JaxRsRestlet
- * must not do anything. <br>
+ * data in {@link org.restlet.Response} were set, so that the JaxRsRestlet must
+ * not do anything. <br>
  * This Exception only indicates this.
  * 
  * @author Stephan Koops

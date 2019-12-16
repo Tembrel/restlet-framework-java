@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -66,6 +57,13 @@ public class ObapClientHelper extends LocalClientHelper {
     private final static Map<String, Bundle> BUNDLE_CACHE = new ConcurrentHashMap<String, Bundle>();
 
     /**
+     * Clears the registry of bundles.
+     */
+    public static void clear() {
+        BUNDLE_CACHE.clear();
+    }
+
+    /**
      * Registers the given bundle.
      * 
      * @param bundle
@@ -80,13 +78,6 @@ public class ObapClientHelper extends LocalClientHelper {
             result = true;
         }
         return result;
-    }
-
-    /**
-     * Clears the registry of bundles.
-     */
-    public static void clear() {
-        BUNDLE_CACHE.clear();
     }
 
     /**
@@ -202,7 +193,7 @@ public class ObapClientHelper extends LocalClientHelper {
         if (scheme.equalsIgnoreCase(Protocol.OBAP.getSchemeName())) {
             Bundle bundle = BUNDLE_CACHE.get(request.getResourceRef()
                     .getAuthority());
-            getLogger().info(
+            getLogger().fine(
                     "Look for bundle "
                             + request.getResourceRef().getAuthority());
             handleBundle(request, response, bundle);

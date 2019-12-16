@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -48,7 +39,6 @@ import org.restlet.Context;
 /**
  * Jetty SSL context factory based on a Restlet SSL context one.
  * 
- * 
  * @author Jerome Louvel
  */
 public class RestletSslContextFactory extends SslContextFactory {
@@ -69,9 +59,8 @@ public class RestletSslContextFactory extends SslContextFactory {
     @Override
     public void checkKeyStore() {
         try {
-            if (getSslContext() == null) {
+            if (getSslContext() == null)
                 super.checkKeyStore();
-            }
         } catch (IllegalStateException e) {
             Context.getCurrentLogger().log(Level.FINE,
                     "Unable to check Jetty SSL keystore", e);
@@ -79,12 +68,12 @@ public class RestletSslContextFactory extends SslContextFactory {
     }
 
     @Override
-    public SSLEngine newSslEngine() {
+    public SSLEngine newSSLEngine() {
         return getSslContext().createSSLEngine();
     }
 
     @Override
-    public SSLEngine newSslEngine(String host, int port) {
+    public SSLEngine newSSLEngine(String host, int port) {
         return getSslContext().createSSLEngine(host, port);
     }
 
@@ -102,5 +91,4 @@ public class RestletSslContextFactory extends SslContextFactory {
     public SSLSocket newSslSocket() throws IOException {
         return (SSLSocket) getSslContext().getSocketFactory().createSocket();
     }
-
 }

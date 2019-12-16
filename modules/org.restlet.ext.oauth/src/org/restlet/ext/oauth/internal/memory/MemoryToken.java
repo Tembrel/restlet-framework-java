@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -42,11 +33,9 @@ import org.restlet.ext.oauth.internal.ServerToken;
  */
 public class MemoryToken implements ServerToken {
 
-    private final long timestamp;
-
     private String accessToken;
 
-    private String tokenType;
+    private String clientId;
 
     private int expirePeriod;
 
@@ -54,7 +43,9 @@ public class MemoryToken implements ServerToken {
 
     private String[] scope;
 
-    private String clientId;
+    private final long timestamp;
+
+    private String tokenType;
 
     private String username;
 
@@ -70,26 +61,10 @@ public class MemoryToken implements ServerToken {
     }
 
     /**
-     * @param accessToken
-     *            the accessToken to set
+     * @return the clientId
      */
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    /**
-     * @return the tokenType
-     */
-    public String getTokenType() {
-        return tokenType;
-    }
-
-    /**
-     * @param tokenType
-     *            the tokenType to set
-     */
-    public void setTokenType(String tokenType) {
-        this.tokenType = tokenType;
+    public String getClientId() {
+        return clientId;
     }
 
     /**
@@ -100,26 +75,10 @@ public class MemoryToken implements ServerToken {
     }
 
     /**
-     * @param expirePeriod
-     *            the expirePeriod to set
-     */
-    public void setExpirePeriod(int expirePeriod) {
-        this.expirePeriod = expirePeriod;
-    }
-
-    /**
      * @return the refreshToken
      */
     public String getRefreshToken() {
         return refreshToken;
-    }
-
-    /**
-     * @param refreshToken
-     *            the refreshToken to set
-     */
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
     }
 
     /**
@@ -130,18 +89,34 @@ public class MemoryToken implements ServerToken {
     }
 
     /**
-     * @param scope
-     *            the scope to set
+     * @return the tokenType
      */
-    public void setScope(String[] scope) {
-        this.scope = scope;
+    public String getTokenType() {
+        return tokenType;
     }
 
     /**
-     * @return the clientId
+     * @return the username
      */
-    public String getClientId() {
-        return clientId;
+    public String getUsername() {
+        return username;
+    }
+
+    public boolean isExpired() {
+        long elapsedTime = System.currentTimeMillis() - timestamp;
+        long timeout = expirePeriod;
+        if ((elapsedTime / 1000) > timeout) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param accessToken
+     *            the accessToken to set
+     */
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
     /**
@@ -153,10 +128,35 @@ public class MemoryToken implements ServerToken {
     }
 
     /**
-     * @return the username
+     * @param expirePeriod
+     *            the expirePeriod to set
      */
-    public String getUsername() {
-        return username;
+    public void setExpirePeriod(int expirePeriod) {
+        this.expirePeriod = expirePeriod;
+    }
+
+    /**
+     * @param refreshToken
+     *            the refreshToken to set
+     */
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    /**
+     * @param scope
+     *            the scope to set
+     */
+    public void setScope(String[] scope) {
+        this.scope = scope;
+    }
+
+    /**
+     * @param tokenType
+     *            the tokenType to set
+     */
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
     }
 
     /**
@@ -165,14 +165,5 @@ public class MemoryToken implements ServerToken {
      */
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public boolean isExpired() {
-        long elapsedTime = System.currentTimeMillis() - timestamp;
-        long timeout = expirePeriod;
-        if ((elapsedTime / 1000) > timeout) {
-            return true;
-        }
-        return false;
     }
 }

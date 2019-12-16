@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -36,7 +27,9 @@ package org.restlet.ext.oauth;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.restlet.data.Form;
+import org.restlet.data.Parameter;
 import org.restlet.data.Reference;
 import org.restlet.ext.oauth.internal.Scopes;
 import org.restlet.representation.Representation;
@@ -54,9 +47,9 @@ public class OAuthParameters implements OAuthResourceDefs {
         form = new Form();
     }
 
-    @Override
-    public String toString() {
-        return form.getQueryString();
+    public OAuthParameters add(String name, String value) {
+        form.add(name, value);
+        return this;
     }
 
     // protected OAuthParameters clientId(String clientId) {
@@ -69,8 +62,8 @@ public class OAuthParameters implements OAuthResourceDefs {
     // return this;
     // }
 
-    public OAuthParameters responseType(ResponseType responseType) {
-        add(RESPONSE_TYPE, responseType.name());
+    public OAuthParameters code(String code) {
+        add(CODE, code);
         return this;
     }
 
@@ -79,8 +72,8 @@ public class OAuthParameters implements OAuthResourceDefs {
         return this;
     }
 
-    public OAuthParameters code(String code) {
-        add(CODE, code);
+    public OAuthParameters password(String password) {
+        add(PASSWORD, password);
         return this;
     }
 
@@ -89,18 +82,13 @@ public class OAuthParameters implements OAuthResourceDefs {
         return this;
     }
 
-    public OAuthParameters username(String username) {
-        add(USERNAME, username);
-        return this;
-    }
-
-    public OAuthParameters password(String password) {
-        add(PASSWORD, password);
-        return this;
-    }
-
     public OAuthParameters refreshToken(String refreshToken) {
         add(REFRESH_TOKEN, refreshToken);
+        return this;
+    }
+
+    public OAuthParameters responseType(ResponseType responseType) {
+        add(RESPONSE_TYPE, responseType.name());
         return this;
     }
 
@@ -114,13 +102,8 @@ public class OAuthParameters implements OAuthResourceDefs {
         return this;
     }
 
-    public OAuthParameters add(String name, String value) {
-        form.add(name, value);
-        return this;
-    }
-
-    public Representation toRepresentation() {
-        return form.getWebRepresentation();
+    protected Form toForm() {
+        return form;
     }
 
     public Reference toReference(String uri) {
@@ -136,8 +119,29 @@ public class OAuthParameters implements OAuthResourceDefs {
         reference.setQuery(query);
         return reference;
     }
+    
+    public Reference toReference(Reference ref) {
+    	Reference reference = new Reference(ref);
+        
+        //Add each parameter to avoid overwriting existing parameters
+        for(Parameter param : form){
+        	reference.addQueryParameter(param);
+        }
+        
+        return reference;
+    }
 
-    protected Form toForm() {
-        return form;
+    public Representation toRepresentation() {
+        return form.getWebRepresentation();
+    }
+
+    @Override
+    public String toString() {
+        return form.getQueryString();
+    }
+
+    public OAuthParameters username(String username) {
+        add(USERNAME, username);
+        return this;
     }
 }

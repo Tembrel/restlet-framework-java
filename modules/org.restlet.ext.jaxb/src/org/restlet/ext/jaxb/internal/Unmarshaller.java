@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -62,6 +53,9 @@ import org.xml.sax.XMLReader;
  */
 public class Unmarshaller<T> {
 
+    /** The JAXB classloader. */
+    private final ClassLoader classLoader;
+
     /** The JAXB context path. */
     private final String contextPath;
 
@@ -83,9 +77,6 @@ public class Unmarshaller<T> {
             return m;
         }
     };
-
-    /** The JAXB classloader. */
-    private final ClassLoader classLoader;
 
     /**
      * Constructor.
@@ -148,6 +139,23 @@ public class Unmarshaller<T> {
     }
 
     /**
+     * Unmarshal XML data from the specified Restlet string representation and
+     * return the resulting Java content tree.
+     * 
+     * @param jaxbRep
+     *            The source JAXB representation.
+     * @return The newly created root object of the Java content tree.
+     * @throws JAXBException
+     *             If any unexpected problem occurs during unmarshaling.
+     * @throws IOException
+     *             If an error occurs accessing the string representation.
+     */
+    public Object unmarshal(JaxbRepresentation<?> jaxbRep)
+            throws JAXBException, IOException {
+        return unmarshal(jaxbRep, jaxbRep.getReader());
+    }
+
+    /**
      * Unmarshal XML data from the specified input stream and return the
      * resulting Java content tree.
      * 
@@ -203,22 +211,5 @@ public class Unmarshaller<T> {
 
         getUnmarshaller().setEventHandler(jaxbRep.getValidationEventHandler());
         return getUnmarshaller().unmarshal(ss);
-    }
-
-    /**
-     * Unmarshal XML data from the specified Restlet string representation and
-     * return the resulting Java content tree.
-     * 
-     * @param jaxbRep
-     *            The source JAXB representation.
-     * @return The newly created root object of the Java content tree.
-     * @throws JAXBException
-     *             If any unexpected problem occurs during unmarshaling.
-     * @throws IOException
-     *             If an error occurs accessing the string representation.
-     */
-    public Object unmarshal(JaxbRepresentation<?> jaxbRep)
-            throws JAXBException, IOException {
-        return unmarshal(jaxbRep, jaxbRep.getReader());
     }
 }

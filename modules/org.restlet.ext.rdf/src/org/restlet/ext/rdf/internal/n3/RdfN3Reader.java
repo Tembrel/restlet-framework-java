@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -158,9 +149,7 @@ public class RdfN3Reader extends RdfTurtleReader {
                     // take care of the "path" shorthands.
                     int j = i + 1;
                     if (j < lexicalUnits.size() && isPath(lexicalUnits.get(j))) {
-                        if ("!"
-                                .equalsIgnoreCase(lexicalUnits.get(j)
-                                        .getValue())) {
+                        if ("!".equalsIgnoreCase(lexicalUnits.get(j).getValue())) {
                             // Create a new BlankNode which is the object of the
                             // current link.
                             currentObject = new BlankNodeToken(newBlankNodeId())

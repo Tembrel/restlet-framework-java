@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -314,19 +305,25 @@ public class Query<T> implements Iterable<T> {
      */
     protected String createTargetUri() {
         String service = getService().getServiceRef().toString();
-        StringBuilder result = new StringBuilder(service);
+        StringBuilder result = new StringBuilder();
         String subpath = (getSubpath() == null) ? "" : getSubpath();
-        if (service.endsWith("/")) {
-            if (subpath.startsWith("/")) {
-                result.append(subpath.substring(1));
-            } else {
-                result.append(subpath);
-            }
+        Reference ref = new Reference(subpath);
+        if (ref.isAbsolute()) {
+            result = new StringBuilder(subpath);
         } else {
-            if (subpath.startsWith("/")) {
-                result.append(subpath);
+            result = new StringBuilder(service);
+            if (service.endsWith("/")) {
+                if (subpath.startsWith("/")) {
+                    result.append(subpath.substring(1));
+                } else {
+                    result.append(subpath);
+                }
             } else {
-                result.append("/").append(subpath);
+                if (subpath.startsWith("/")) {
+                    result.append(subpath);
+                } else {
+                    result.append("/").append(subpath);
+                }
             }
         }
         if (getQuery() != null) {

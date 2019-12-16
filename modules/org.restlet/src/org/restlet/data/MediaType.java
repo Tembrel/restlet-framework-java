@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -33,9 +24,12 @@
 
 package org.restlet.data;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
+import org.restlet.Context;
 import org.restlet.engine.header.HeaderWriter;
 import org.restlet.engine.util.SystemUtils;
 import org.restlet.util.Series;
@@ -91,6 +85,10 @@ public final class MediaType extends Metadata {
     public static final MediaType APPLICATION_CAB = register(
             "application/vnd.ms-cab-compressed", "Microsoft Cabinet archive");
 
+    // [ifndef gwt] member
+    public static final MediaType APPLICATION_CBOR = register(
+            "application/cbor", "Concise Binary Object Representation document");
+    
     // [ifndef gwt] member
     public static final MediaType APPLICATION_COMPRESS = register(
             "application/x-compress", "Compressed file");
@@ -808,22 +806,28 @@ public final class MediaType extends Metadata {
 
         // Merge parameters taken from the name and the method argument.
         if (parameters != null && !parameters.isEmpty()) {
-            if (params == null) {
-                params = new StringBuilder();
-            }
-            HeaderWriter<Parameter> hw = new HeaderWriter<Parameter>() {
-                @Override
-                public HeaderWriter<Parameter> append(Parameter value) {
-                    return appendExtension(value);
+            try {
+                if (params == null) {
+                    params = new StringBuilder();
                 }
-            };
-            for (int i = 0; i < parameters.size(); i++) {
-                Parameter p = parameters.get(i);
-                hw.appendParameterSeparator();
-                hw.appendSpace();
-                hw.append(p);
+                HeaderWriter<Parameter> hw = new HeaderWriter<Parameter>() {
+                    @Override
+                    public HeaderWriter<Parameter> append(Parameter value) {
+                        return appendExtension(value);
+                    }
+                };
+                for (int i = 0; i < parameters.size(); i++) {
+                    Parameter p = parameters.get(i);
+                    hw.appendParameterSeparator();
+                    hw.appendSpace();
+                    hw.append(p);
+                }
+                params.append(hw.toString());
+                hw.close();
+            } catch (IOException e) {
+                Context.getCurrentLogger().log(Level.INFO,
+                        "Unable to parse the media type parameter", e);
             }
-            params.append(hw.toString());
         }
 
         return (params == null) ? mainType + '/' + subType : mainType + '/'

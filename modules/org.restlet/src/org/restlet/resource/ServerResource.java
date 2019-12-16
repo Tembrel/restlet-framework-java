@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -58,6 +49,7 @@ import org.restlet.data.ServerInfo;
 import org.restlet.data.Status;
 import org.restlet.engine.resource.AnnotationInfo;
 import org.restlet.engine.resource.AnnotationUtils;
+import org.restlet.engine.resource.MethodAnnotationInfo;
 import org.restlet.engine.resource.VariantInfo;
 import org.restlet.representation.Representation;
 import org.restlet.representation.RepresentationInfo;
@@ -109,8 +101,14 @@ public abstract class ServerResource extends Resource {
     /** Indicates if conditional handling is enabled. */
     private volatile boolean conditional;
 
+    /** The description. */
+    private volatile String description;
+
     /** Indicates if the identified resource exists. */
     private volatile boolean existing;
+
+    /** The display name. */
+    private volatile String name;
 
     /** Indicates if content negotiation of response entities is enabled. */
     private volatile boolean negotiated;
@@ -172,7 +170,7 @@ public abstract class ServerResource extends Resource {
      */
     protected Representation delete() throws ResourceException {
         Representation result = null;
-        AnnotationInfo annotationInfo;
+        MethodAnnotationInfo annotationInfo;
 
         try {
             annotationInfo = getAnnotation(Method.DELETE);
@@ -247,15 +245,14 @@ public abstract class ServerResource extends Resource {
      * Invoked when an error or an exception is caught during initialization,
      * handling or releasing. By default, updates the responses's status with
      * the result of
-     * {@link org.restlet.service.StatusService#getStatus(Throwable, Resource)}
-     * .
+     * {@link org.restlet.service.StatusService#toStatus(Throwable, Resource)}.
      * 
      * @param throwable
      *            The caught error or exception.
      */
     protected void doCatch(Throwable throwable) {
         Level level = Level.INFO;
-        Status status = getStatusService().getStatus(throwable, this);
+        Status status = getStatusService().toStatus(throwable, this);
 
         if (status.isServerError()) {
             level = Level.WARNING;
@@ -270,6 +267,9 @@ public abstract class ServerResource extends Resource {
 
         if (getResponse() != null) {
             getResponse().setStatus(status);
+            Representation errorEntity = getStatusService().toRepresentation(
+                    status, this);
+            getResponse().setEntity(errorEntity);
         }
     }
 
@@ -309,8 +309,7 @@ public abstract class ServerResource extends Resource {
                         doError(Status.CLIENT_ERROR_NOT_FOUND);
                     } else {
                         // Keep the current status as the developer might
-                        // prefer
-                        // a special status like 'method not authorized'.
+                        // prefer a special status like 'method not authorized'.
                     }
                 } else {
                     Status status = getConditions().getStatus(getMethod(),
@@ -380,7 +379,7 @@ public abstract class ServerResource extends Resource {
      */
     private RepresentationInfo doGetInfo() throws ResourceException {
         RepresentationInfo result = null;
-        AnnotationInfo annotationInfo;
+        MethodAnnotationInfo annotationInfo;
 
         try {
             annotationInfo = getAnnotation(Method.GET);
@@ -480,7 +479,7 @@ public abstract class ServerResource extends Resource {
      * @return The response entity.
      * @throws ResourceException
      */
-    private Representation doHandle(AnnotationInfo annotationInfo,
+    private Representation doHandle(MethodAnnotationInfo annotationInfo,
             Variant variant) throws ResourceException {
         Representation result = null;
         Class<?>[] parameterTypes = annotationInfo.getJavaInputTypes();
@@ -568,8 +567,8 @@ public abstract class ServerResource extends Resource {
         try {
             if (getAnnotation(method) != null) {
                 // We know the method is supported, let's check the entity.
-                AnnotationInfo annotationInfo = getAnnotation(method, query,
-                        entity);
+                MethodAnnotationInfo annotationInfo = getAnnotation(method,
+                        query, entity);
 
                 if (annotationInfo != null) {
                     result = doHandle(annotationInfo, null);
@@ -702,7 +701,7 @@ public abstract class ServerResource extends Resource {
      */
     protected Representation get() throws ResourceException {
         Representation result = null;
-        AnnotationInfo annotationInfo;
+        MethodAnnotationInfo annotationInfo;
 
         try {
             annotationInfo = getAnnotation(Method.GET);
@@ -757,7 +756,8 @@ public abstract class ServerResource extends Resource {
      * @return The annotation descriptor.
      * @throws IOException
      */
-    private AnnotationInfo getAnnotation(Method method) throws IOException {
+    private MethodAnnotationInfo getAnnotation(Method method)
+            throws IOException {
         return getAnnotation(method, getQuery(), null);
     }
 
@@ -773,10 +773,10 @@ public abstract class ServerResource extends Resource {
      * @return The annotation descriptor.
      * @throws IOException
      */
-    private AnnotationInfo getAnnotation(Method method, Form query,
+    private MethodAnnotationInfo getAnnotation(Method method, Form query,
             Representation entity) throws IOException {
         if (isAnnotated()) {
-            return AnnotationUtils.getInstance().getAnnotation(
+            return AnnotationUtils.getInstance().getMethodAnnotation(
                     getAnnotations(), method, query, entity,
                     getMetadataService(), getConverterService());
         }
@@ -807,6 +807,15 @@ public abstract class ServerResource extends Resource {
     public String getAttribute(String name) {
         Object value = getRequestAttributes().get(name);
         return (value == null) ? null : value.toString();
+    }
+
+    /**
+     * Returns the description.
+     * 
+     * @return The description
+     */
+    public String getDescription() {
+        return this.description;
     }
 
     /**
@@ -847,6 +856,15 @@ public abstract class ServerResource extends Resource {
     protected RepresentationInfo getInfo(Variant variant)
             throws ResourceException {
         return get(variant);
+    }
+
+    /**
+     * Returns the display name.
+     * 
+     * @return The display name.
+     */
+    public String getName() {
+        return this.name;
     }
 
     /**
@@ -929,43 +947,54 @@ public abstract class ServerResource extends Resource {
 
                 for (AnnotationInfo annotationInfo : getAnnotations()) {
                     try {
-                        if (annotationInfo.isCompatible(method, getQuery(),
-                                getRequestEntity(), getMetadataService(),
-                                getConverterService())) {
-                            annoVariants = annotationInfo
-                                    .getResponseVariants(getMetadataService(),
-                                            getConverterService());
+                        if (annotationInfo instanceof MethodAnnotationInfo) {
+                            MethodAnnotationInfo methodAnnotationInfo = (MethodAnnotationInfo) annotationInfo;
 
-                            if (annoVariants != null) {
-                                // Compute an affinity score between this
-                                // annotation and the input entity.
-                                float score = 0.5f;
-                                if ((getRequest().getEntity() != null)
-                                        && getRequest().getEntity()
-                                                .isAvailable()) {
-                                    MediaType emt = getRequest().getEntity()
-                                            .getMediaType();
-                                    List<MediaType> amts = getMetadataService()
-                                            .getAllMediaTypes(
-                                                    annotationInfo.getInput());
-                                    if (amts != null) {
-                                        for (MediaType amt : amts) {
-                                            if (amt.equals(emt)) {
-                                                score = 1.0f;
-                                            } else if (amt.includes(emt)) {
-                                                score = Math.max(0.8f, score);
-                                            } else if (amt.isCompatible(emt)) {
-                                                score = Math.max(0.6f, score);
+                            if (methodAnnotationInfo
+                                    .isCompatible(method, getQuery(),
+                                            getRequestEntity(),
+                                            getMetadataService(),
+                                            getConverterService())) {
+                                annoVariants = methodAnnotationInfo
+                                        .getResponseVariants(
+                                                getMetadataService(),
+                                                getConverterService());
+
+                                if (annoVariants != null) {
+                                    // Compute an affinity score between this
+                                    // annotation and the input entity.
+                                    float score = 0.5f;
+                                    if ((getRequest().getEntity() != null)
+                                            && getRequest().getEntity()
+                                                    .isAvailable()) {
+                                        MediaType emt = getRequest()
+                                                .getEntity().getMediaType();
+                                        List<MediaType> amts = getMetadataService()
+                                                .getAllMediaTypes(
+                                                        methodAnnotationInfo
+                                                                .getInput());
+                                        if (amts != null) {
+                                            for (MediaType amt : amts) {
+                                                if (amt.equals(emt)) {
+                                                    score = 1.0f;
+                                                } else if (amt.includes(emt)) {
+                                                    score = Math.max(0.8f,
+                                                            score);
+                                                } else if (amt
+                                                        .isCompatible(emt)) {
+                                                    score = Math.max(0.6f,
+                                                            score);
+                                                }
                                             }
                                         }
                                     }
-                                }
 
-                                for (Variant v : annoVariants) {
-                                    VariantInfo vi = new VariantInfo(v,
-                                            annotationInfo);
-                                    vi.setInputScore(score);
-                                    result.add(vi);
+                                    for (Variant v : annoVariants) {
+                                        VariantInfo vi = new VariantInfo(v,
+                                                methodAnnotationInfo);
+                                        vi.setInputScore(score);
+                                        result.add(vi);
+                                    }
                                 }
                             }
                         }
@@ -1022,18 +1051,19 @@ public abstract class ServerResource extends Resource {
                     // If the user manually set the entity, keep it
                     getResponse().setEntity(result);
                 }
-
+            } catch (Throwable t) {
+                doCatch(t);
+            } finally {
                 if (Status.CLIENT_ERROR_METHOD_NOT_ALLOWED.equals(getStatus())) {
                     updateAllowedMethods();
                 } else if (Status.SUCCESS_OK.equals(getStatus())
                         && (getResponseEntity() == null || !getResponseEntity()
                                 .isAvailable())) {
                     getLogger()
-                            .fine("A response with a 200 (Ok) status should have an entity. Changing the status to 204 (No content).");
+                            .fine("A response with a 200 (Ok) status should have an entity. "
+                                    + "Changing the status to 204 (No content).");
                     setStatus(Status.SUCCESS_NO_CONTENT);
                 }
-            } catch (Throwable t) {
-                doCatch(t);
             }
         }
 
@@ -1176,7 +1206,7 @@ public abstract class ServerResource extends Resource {
      */
     protected Representation options() throws ResourceException {
         Representation result = null;
-        AnnotationInfo annotationInfo;
+        MethodAnnotationInfo annotationInfo;
 
         try {
             annotationInfo = getAnnotation(Method.OPTIONS);
@@ -1604,6 +1634,16 @@ public abstract class ServerResource extends Resource {
     }
 
     /**
+     * Sets the description.
+     * 
+     * @param description
+     *            The description.
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    /**
      * Sets the set of dimensions on which the response entity may vary. The set
      * instance set must be thread-safe (use {@link CopyOnWriteArraySet} for
      * example.
@@ -1657,6 +1697,16 @@ public abstract class ServerResource extends Resource {
         if (getResponse() != null) {
             getResponse().setLocationRef(locationUri);
         }
+    }
+
+    /**
+     * Sets the display name.
+     * 
+     * @param name
+     *            The display name.
+     */
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -1781,9 +1831,14 @@ public abstract class ServerResource extends Resource {
 
         if (annotations != null) {
             for (AnnotationInfo annotationInfo : annotations) {
-                if (!getAllowedMethods().contains(
-                        annotationInfo.getRestletMethod())) {
-                    getAllowedMethods().add(annotationInfo.getRestletMethod());
+                if (annotationInfo instanceof MethodAnnotationInfo) {
+                    MethodAnnotationInfo methodAnnotationInfo = (MethodAnnotationInfo) annotationInfo;
+
+                    if (!getAllowedMethods().contains(
+                            methodAnnotationInfo.getRestletMethod())) {
+                        getAllowedMethods().add(
+                                methodAnnotationInfo.getRestletMethod());
+                    }
                 }
             }
         }

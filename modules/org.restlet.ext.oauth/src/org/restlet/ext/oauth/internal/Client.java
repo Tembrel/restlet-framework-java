@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -34,6 +25,7 @@
 package org.restlet.ext.oauth.internal;
 
 import java.util.Map;
+
 import org.restlet.ext.oauth.GrantType;
 import org.restlet.ext.oauth.ResponseType;
 
@@ -48,15 +40,15 @@ import org.restlet.ext.oauth.ResponseType;
  */
 public interface Client {
 
+    public static enum ClientType {
+        CONFIDENTIAL, PUBLIC
+    }
+
     public static final String PROPERTY_APPLICATION_NAME = "application_name";
 
     public static final String PROPERTY_DESCRIPTION = "description";
 
     public static final String PROPERTY_SUPPORTED_FLOWS = "supported_flows";
-
-    public static enum ClientType {
-        CONFIDENTIAL, PUBLIC
-    }
 
     /**
      * Client id that the client has registered at the auth provider.
@@ -73,6 +65,10 @@ public interface Client {
 
     public char[] getClientSecret();
 
+    public ClientType getClientType();
+
+    public Map<String, Object> getProperties();
+
     /**
      * Redirect URL that the client has registered at the auth provider.
      * 
@@ -80,11 +76,7 @@ public interface Client {
      */
     public String[] getRedirectURIs();
 
-    public Map<String, Object> getProperties();
-
-    public boolean isResponseTypeAllowed(ResponseType responseType);
-
     public boolean isGrantTypeAllowed(GrantType grantType);
 
-    public ClientType getClientType();
+    public boolean isResponseTypeAllowed(ResponseType responseType);
 }

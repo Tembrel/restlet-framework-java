@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -165,7 +156,7 @@ public class Engine {
                 .getCurrent();
         final Response currentResponse = Response.getCurrent();
 
-        return new Thread(new Runnable() {
+        Runnable r = new Runnable() {
 
             @Override
             public void run() {
@@ -183,7 +174,13 @@ public class Engine {
                 }
             }
 
-        }, name);
+        };
+
+        // [ifndef gae] instruction
+        return new Thread(r, name);
+        // [ifdef gae] instruction uncomment
+        // return
+        // com.google.appengine.api.ThreadManager.createThreadForCurrentRequest(r);
     }
 
     // [ifndef gwt] method
@@ -528,7 +525,7 @@ public class Engine {
             } catch (IOException e) {
                 Context.getCurrentLogger()
                         .log(Level.WARNING,
-                                "An error occured while discovering the engine helpers.",
+                                "An error occurred while discovering the engine helpers.",
                                 e);
             }
         }
@@ -883,9 +880,11 @@ public class Engine {
     public void registerDefaultConnectors() {
         // [ifndef gae, gwt]
         getRegisteredClients().add(
-                new org.restlet.engine.connector.HttpClientHelper(null));
+                new org.restlet.engine.connector.FtpClientHelper(null));
         // [enddef]
         // [ifndef gwt]
+        getRegisteredClients().add(
+                new org.restlet.engine.connector.HttpClientHelper(null));
         getRegisteredClients().add(
                 new org.restlet.engine.local.ClapClientHelper(null));
         getRegisteredClients().add(
@@ -893,14 +892,21 @@ public class Engine {
         getRegisteredServers().add(
                 new org.restlet.engine.local.RiapServerHelper(null));
         // [enddef]
-        // [ifndef gae, gwt]
+
+        // [ifndef android, gae, gwt]
         getRegisteredServers().add(
                 new org.restlet.engine.connector.HttpServerHelper(null));
+        getRegisteredServers().add(
+                new org.restlet.engine.connector.HttpsServerHelper(null));
+        // [enddef]
+
+        // [ifndef gae, gwt]
         getRegisteredClients().add(
                 new org.restlet.engine.local.FileClientHelper(null));
         getRegisteredClients().add(
                 new org.restlet.engine.local.ZipClientHelper(null));
         // [enddef]
+
         // [ifdef gwt] uncomment
         // getRegisteredClients().add(
         // new org.restlet.engine.adapter.GwtHttpClientHelper(null));
@@ -922,8 +928,6 @@ public class Engine {
     public void registerDefaultProtocols() {
         getRegisteredProtocols().add(
                 new org.restlet.engine.connector.HttpProtocolHelper());
-        getRegisteredProtocols().add(
-                new org.restlet.engine.connector.WebDavProtocolHelper());
     }
 
     // [ifndef gwt] method
@@ -1030,7 +1034,7 @@ public class Engine {
         }
     }
 
-    // [ifndef gwt] method
+    // [ifndef gae,gwt] method
     /**
      * Registers a factory that is used by the URL class to create the
      * {@link java.net.URLConnection} instances when the

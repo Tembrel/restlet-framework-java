@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -45,15 +36,14 @@ package org.restlet.ext.oauth;
 public enum OAuthError {
 
     access_denied, // 4.1.2.1 & 4.2.2.1
+    insufficient_scope, // Bearer 3.1, // 5.2
     invalid_client, // 5.2
-    invalid_grant, // 5.2
+    invalid_grant, // 4.1.2.1 & 4.2.2.1 & 5.2
     invalid_request, // 4.1.2.1 & 4.2.2.1 & 5.2
     invalid_scope, // 4.1.2.1 & 4.2.2.1 & 5.2
-    unauthorized_client, // 4.1.2.1 & 4.2.2.1 & 5.2
-    unsupported_grant_type, // 5.2
-    unsupported_response_type, // 4.1.2.1 & 4.2.2.1
+    invalid_token, // 5.2
     server_error, // 4.1.2.1 & 4.2.2.1
-
-    invalid_token, // Bearer 3.1
-    insufficient_scope // Bearer 3.1
+    unauthorized_client, // 4.1.2.1 & 4.2.2.1
+    unsupported_grant_type, // Bearer 3.1
+    unsupported_response_type
 }

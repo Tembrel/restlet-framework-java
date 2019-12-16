@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -33,22 +24,12 @@
 
 package org.restlet.ext.jackson;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLOutputFactory;
-
-import org.restlet.data.MediaType;
-import org.restlet.representation.OutputRepresentation;
-import org.restlet.representation.Representation;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvFactory;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
@@ -57,9 +38,17 @@ import com.fasterxml.jackson.dataformat.xml.XmlFactory;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import org.restlet.data.MediaType;
+import org.restlet.ext.jackson.internal.XmlFactoryProvider;
+import org.restlet.representation.OutputRepresentation;
+import org.restlet.representation.Representation;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
 /**
  * Representation based on the Jackson library. It can serialize and deserialize
- * automatically in JSON, JSON binary (Smile), XML, YAML and CSV. <br>
+ * automatically in JSON, JSON binary (Smile), CBOR, XML, YAML and CSV. <br>
  * <br>
  * SECURITY WARNING: Using XML parsers configured to not prevent nor limit
  * document type definition (DTD) entity resolution can expose the parser to an
@@ -74,17 +63,19 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
  *            The type to wrap.
  */
 public class JacksonRepresentation<T> extends OutputRepresentation {
+    // [ifndef android] member
     /**
-     * True for expanding entity references when parsing XML representations;
-     * default value provided by system property
+     * True for expanding entity references when parsing XML representations.
+     * Default value provided by system property
      * "org.restlet.ext.xml.expandingEntityRefs", false by default.
      */
     public static boolean XML_EXPANDING_ENTITY_REFS = Boolean
             .getBoolean("org.restlet.ext.xml.expandingEntityRefs");
 
+    // [ifndef android] member
     /**
-     * True for validating DTD documents when parsing XML representations;
-     * default value provided by system property
+     * True for validating DTD documents when parsing XML representations.
+     * Default value provided by system property
      * "org.restlet.ext.xml.validatingDtd", false by default.
      */
     public static boolean XML_VALIDATING_DTD = Boolean
@@ -93,6 +84,7 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
     /** The modifiable Jackson CSV schema. */
     private CsvSchema csvSchema;
 
+    // [ifndef android] member
     /**
      * Specifies that the parser will expand entity reference nodes. By default
      * the value of this is set to false.
@@ -100,29 +92,30 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
     private volatile boolean expandingEntityRefs;
 
     /** The (parsed) object to format. */
-    private T object;
+    private volatile T object;
 
     /** The object class to instantiate. */
-    private Class<T> objectClass;
+    private volatile Class<T> objectClass;
 
     /** The modifiable Jackson object mapper. */
-    private ObjectMapper objectMapper;
+    private volatile ObjectMapper objectMapper;
 
     /** The modifiable Jackson object reader. */
-    private ObjectReader objectReader;
+    private volatile ObjectReader objectReader;
 
     /** The modifiable Jackson object writer. */
-    private ObjectWriter objectWriter;
+    private volatile ObjectWriter objectWriter;
 
     /** The representation to parse. */
-    private Representation representation;
+    private volatile Representation representation;
 
+    // [ifndef android] member
     /**
      * Indicates the desire for validating this type of XML representations
      * against a DTD. Note that for XML schema or Relax NG validation, use the
      * "schema" property instead.
      * 
-     * @see DocumentBuilderFactory#setValidating(boolean)
+     * @see javax.xml.parsers.DocumentBuilderFactory#setValidating(boolean)
      */
     private volatile boolean validatingDtd;
 
@@ -145,7 +138,9 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
         this.objectReader = null;
         this.objectWriter = null;
         this.csvSchema = null;
+        // [ifndef android] instruction
         this.expandingEntityRefs = XML_EXPANDING_ENTITY_REFS;
+        // [ifndef android] instruction
         this.validatingDtd = XML_VALIDATING_DTD;
     }
 
@@ -167,7 +162,9 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
         this.objectReader = null;
         this.objectWriter = null;
         this.csvSchema = null;
+        // [ifndef android] instruction
         this.expandingEntityRefs = XML_EXPANDING_ENTITY_REFS;
+        // [ifndef android] instruction
         this.validatingDtd = XML_VALIDATING_DTD;
     }
 
@@ -201,7 +198,7 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
      */
     protected ObjectMapper createObjectMapper() {
         ObjectMapper result = null;
-        System.out.println("createObjectMapper");
+
         if (MediaType.APPLICATION_JSON.isCompatible(getMediaType())) {
             JsonFactory jsonFactory = new JsonFactory();
             jsonFactory.configure(Feature.AUTO_CLOSE_TARGET, false);
@@ -211,18 +208,27 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
             SmileFactory smileFactory = new SmileFactory();
             smileFactory.configure(Feature.AUTO_CLOSE_TARGET, false);
             result = new ObjectMapper(smileFactory);
+        } else if (MediaType.APPLICATION_CBOR
+                .isCompatible(getMediaType())) {
+            CBORFactory cborFactory = new CBORFactory();
+            cborFactory.configure(Feature.AUTO_CLOSE_TARGET, false);
+            result = new ObjectMapper(cborFactory);
+            // [ifndef android]
         } else if (MediaType.APPLICATION_XML.isCompatible(getMediaType())
                 || MediaType.TEXT_XML.isCompatible(getMediaType())) {
-            XMLInputFactory xif = XMLInputFactory.newFactory();
-            xif.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES,
+            javax.xml.stream.XMLInputFactory xif = XmlFactoryProvider.newInputFactory();
+            xif.setProperty(
+                    javax.xml.stream.XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES,
                     isExpandingEntityRefs());
-            xif.setProperty(XMLInputFactory.SUPPORT_DTD,
+            xif.setProperty(javax.xml.stream.XMLInputFactory.SUPPORT_DTD,
                     isExpandingEntityRefs());
-            xif.setProperty(XMLInputFactory.IS_VALIDATING, isValidatingDtd());
-            XMLOutputFactory xof = XMLOutputFactory.newFactory();
+            xif.setProperty(javax.xml.stream.XMLInputFactory.IS_VALIDATING,
+                    isValidatingDtd());
+            javax.xml.stream.XMLOutputFactory xof = XmlFactoryProvider.newOutputFactory();
             XmlFactory xmlFactory = new XmlFactory(xif, xof);
             xmlFactory.configure(Feature.AUTO_CLOSE_TARGET, false);
             result = new XmlMapper(xmlFactory);
+            // [enddef]
         } else if (MediaType.APPLICATION_YAML.isCompatible(getMediaType())
                 || MediaType.TEXT_YAML.isCompatible(getMediaType())) {
             YAMLFactory yamlFactory = new YAMLFactory();
@@ -365,6 +371,7 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
         return this.objectWriter;
     }
 
+    // [ifndef android] method
     /**
      * Indicates if the parser will expand entity reference nodes. By default
      * the value of this is set to true.
@@ -375,6 +382,7 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
         return expandingEntityRefs;
     }
 
+    // [ifndef android] method
     /**
      * Indicates the desire for validating this type of XML representations
      * against an XML schema if one is referenced within the contents.
@@ -395,6 +403,7 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
         this.csvSchema = csvSchema;
     }
 
+    // [ifndef android] method
     /**
      * Indicates if the parser will expand entity reference nodes. By default
      * the value of this is set to true.
@@ -456,6 +465,7 @@ public class JacksonRepresentation<T> extends OutputRepresentation {
         this.objectWriter = objectWriter;
     }
 
+    // [ifndef android] method
     /**
      * Indicates the desire for validating this type of XML representations
      * against an XML schema if one is referenced within the contents.

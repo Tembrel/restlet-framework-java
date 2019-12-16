@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -69,6 +60,18 @@ public class OAuthParametersTest {
     public void testToReference() {
         Reference reference = parameters.toReference("http://localhost/test");
         Form form = reference.getQueryAsForm();
+        assertEquals("val1", form.getFirstValue("foo"));
+        assertEquals("val2", form.getFirstValue("bar"));
+        assertEquals("val3", form.getFirstValue("buz"));
+    }
+    
+    @Test
+    public void testToReferenceFromReference() {
+    	Reference originalReference = new Reference("http://localhost/test?existing=thing");
+    	
+        Reference reference = parameters.toReference(originalReference);
+        Form form = reference.getQueryAsForm();
+        assertEquals("thing", form.getFirstValue("existing"));
         assertEquals("val1", form.getFirstValue("foo"));
         assertEquals("val2", form.getFirstValue("bar"));
         assertEquals("val3", form.getFirstValue("buz"));

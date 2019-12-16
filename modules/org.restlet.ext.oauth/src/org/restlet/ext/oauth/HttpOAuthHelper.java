@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -41,9 +32,9 @@ import org.restlet.Response;
 import org.restlet.data.ChallengeRequest;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Form;
+import org.restlet.data.Header;
 import org.restlet.data.Parameter;
 import org.restlet.engine.header.ChallengeWriter;
-import org.restlet.engine.header.Header;
 import org.restlet.engine.security.AuthenticatorHelper;
 import org.restlet.util.Series;
 
@@ -126,17 +117,6 @@ public class HttpOAuthHelper extends AuthenticatorHelper {
     }
 
     /**
-     * Returns the value of the "loginPage" parameter.
-     * 
-     * @param c
-     *            The context where to find the parameter.
-     * @return The value of the "loginPage" parameter.
-     */
-    public static String getLoginPage(Context c) {
-        return c.getParameters().getFirstValue("login", "/login");
-    }
-
-    /**
      * Returns the value of the "authPageTemplate" parameter.
      * 
      * @param c
@@ -167,6 +147,17 @@ public class HttpOAuthHelper extends AuthenticatorHelper {
     }
 
     /**
+     * Returns the value of the "loginPage" parameter.
+     * 
+     * @param c
+     *            The context where to find the parameter.
+     * @return The value of the "loginPage" parameter.
+     */
+    public static String getLoginPage(Context c) {
+        return c.getParameters().getFirstValue("login", "/login");
+    }
+
+    /**
      * Sets the value of the "authPage" parameter.
      * 
      * @param authPage
@@ -176,18 +167,6 @@ public class HttpOAuthHelper extends AuthenticatorHelper {
      */
     public static void setAuthPage(String authPage, Context c) {
         c.getParameters().set("authPage", authPage);
-    }
-
-    /**
-     * Sets the value of the "loginPage" parameter.
-     * 
-     * @param loginPage
-     *            The value of the "loginPage" parameter.
-     * @param c
-     *            The context to update.
-     */
-    public static void setLoginPage(String loginPage, Context c) {
-        c.getParameters().set("loginPage", loginPage);
     }
 
     /**
@@ -216,6 +195,18 @@ public class HttpOAuthHelper extends AuthenticatorHelper {
 
     public static void setErrorPageTemplate(String errorPageTemplate, Context c) {
         c.getParameters().set("errorPageTemplate", errorPageTemplate);
+    }
+
+    /**
+     * Sets the value of the "loginPage" parameter.
+     * 
+     * @param loginPage
+     *            The value of the "loginPage" parameter.
+     * @param c
+     *            The context to update.
+     */
+    public static void setLoginPage(String loginPage, Context c) {
+        c.getParameters().set("loginPage", loginPage);
     }
 
     /**

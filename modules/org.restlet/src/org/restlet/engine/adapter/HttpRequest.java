@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -37,15 +28,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.restlet.Context;
+import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.data.CacheDirective;
 import org.restlet.data.ChallengeResponse;
 import org.restlet.data.ClientInfo;
 import org.restlet.data.Conditions;
 import org.restlet.data.Cookie;
+import org.restlet.data.Header;
 import org.restlet.data.Method;
 import org.restlet.data.Range;
 import org.restlet.data.RecipientInfo;
@@ -55,12 +49,12 @@ import org.restlet.data.Warning;
 import org.restlet.engine.header.CacheDirectiveReader;
 import org.restlet.engine.header.CookieReader;
 import org.restlet.engine.header.ExpectationReader;
-import org.restlet.engine.header.Header;
 import org.restlet.engine.header.HeaderConstants;
 import org.restlet.engine.header.HeaderReader;
 import org.restlet.engine.header.PreferenceReader;
 import org.restlet.engine.header.RangeReader;
 import org.restlet.engine.header.RecipientInfoReader;
+import org.restlet.engine.header.StringReader;
 import org.restlet.engine.header.WarningReader;
 import org.restlet.engine.security.AuthenticatorUtils;
 import org.restlet.engine.util.DateUtils;
@@ -82,14 +76,25 @@ public class HttpRequest extends Request {
      *            The header name to add.
      * @param headerValue
      *            The header value to add.
+     * @deprecated Use {@link Message#getHeaders()} directly instead.
      */
+    @Deprecated
     public static void addHeader(Request request, String headerName,
             String headerValue) {
-        if (request instanceof HttpRequest) {
-            ((HttpRequest) request).getHeaders().add(
-                    new Header(headerName, headerValue));
-        }
+        request.getHeaders().add(new Header(headerName, headerValue));
     }
+
+    /**
+     * Indicates if the access control data for request headers was parsed and
+     * added
+     */
+    private volatile boolean accessControlRequestHeadersAdded;
+
+    /**
+     * Indicates if the access control data for request methods was parsed and
+     * added
+     */
+    private volatile boolean accessControlRequestMethodAdded;
 
     /** Indicates if the cache control data was parsed and added. */
     private volatile boolean cacheDirectivesAdded;
@@ -118,6 +123,9 @@ public class HttpRequest extends Request {
     /** Indicates if the ranges data was parsed and added. */
     private volatile boolean rangesAdded;
 
+    /** Indicates if the recipients info was parsed and added. */
+    private volatile boolean recipientsInfoAdded;
+
     /** Indicates if the referrer was parsed and added. */
     private volatile boolean referrerAdded;
 
@@ -126,9 +134,6 @@ public class HttpRequest extends Request {
 
     /** Indicates if the warning data was parsed and added. */
     private volatile boolean warningsAdded;
-
-    /** Indicates if the recipients info was parsed and added. */
-    private volatile boolean recipientsInfoAdded;
 
     /**
      * Constructor.
@@ -206,6 +211,37 @@ public class HttpRequest extends Request {
     @Override
     public void flushBuffers() throws IOException {
         getHttpCall().flushBuffers();
+    }
+
+    @Override
+    public Set<String> getAccessControlRequestHeaders() {
+        Set<String> result = super.getAccessControlRequestHeaders();
+        if (!accessControlRequestHeadersAdded) {
+            for (String header : getHttpCall()
+                    .getRequestHeaders()
+                    .getValuesArray(
+                            HeaderConstants.HEADER_ACCESS_CONTROL_REQUEST_HEADERS,
+                            true)) {
+                new StringReader(header).addValues(result);
+            }
+            accessControlRequestHeadersAdded = true;
+        }
+        return result;
+    }
+
+    @Override
+    public Method getAccessControlRequestMethod() {
+        Method result = super.getAccessControlRequestMethod();
+        if (!accessControlRequestMethodAdded) {
+            String header = getHttpCall().getRequestHeaders().getFirstValue(
+                    HeaderConstants.HEADER_ACCESS_CONTROL_REQUEST_METHOD, true);
+            if (header != null) {
+                result = Method.valueOf(header);
+                super.setAccessControlRequestMethod(result);
+            }
+            accessControlRequestMethodAdded = true;
+        }
+        return result;
     }
 
     @Override
@@ -508,17 +544,6 @@ public class HttpRequest extends Request {
     }
 
     /**
-     * Returns the HTTP headers.
-     * 
-     * @return The HTTP headers.
-     */
-    @SuppressWarnings("unchecked")
-    public Series<Header> getHeaders() {
-        return (Series<Header>) getAttributes().get(
-                HeaderConstants.ATTRIBUTE_HEADERS);
-    }
-
-    /**
      * Returns the low-level HTTP call.
      * 
      * @return The low-level HTTP call.
@@ -609,6 +634,19 @@ public class HttpRequest extends Request {
     }
 
     @Override
+    public void setAccessControlRequestHeaders(
+            Set<String> accessControlRequestHeaders) {
+        super.setAccessControlRequestHeaders(accessControlRequestHeaders);
+        this.accessControlRequestHeadersAdded = true;
+    }
+
+    @Override
+    public void setAccessControlRequestMethod(Method accessControlRequestMethod) {
+        super.setAccessControlRequestMethod(accessControlRequestMethod);
+        this.accessControlRequestMethodAdded = true;
+    }
+
+    @Override
     public void setChallengeResponse(ChallengeResponse response) {
         super.setChallengeResponse(response);
         this.securityAdded = true;
@@ -637,5 +675,4 @@ public class HttpRequest extends Request {
         super.setWarnings(warnings);
         this.warningsAdded = true;
     }
-
 }

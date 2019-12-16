@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -38,9 +29,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.util.Date;
-import java.util.logging.Level;
 
-import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Disposition;
@@ -341,28 +330,6 @@ public abstract class Representation extends RepresentationInfo {
      */
     public abstract Reader getReader() throws IOException;
 
-    // [ifndef gae,gwt] method
-    /**
-     * Returns the NIO registration of the related channel with its selector.
-     * You can modify this registration to be called back when some readable
-     * content is available. Note that the listener will keep being called back
-     * until you suspend or cancel the registration returned by this method.
-     * 
-     * @return The NIO registration.
-     * @throws IOException
-     * @see #isSelectable()
-     */
-    public org.restlet.util.SelectionRegistration getRegistration()
-            throws IOException {
-        if (isSelectable()) {
-            return ((org.restlet.engine.io.SelectionChannel) getChannel())
-                    .getRegistration();
-        } else {
-            throw new IllegalStateException(
-                    "The representation isn't selectable");
-        }
-    }
-
     /**
      * Returns the total size in bytes if known, UNKNOWN_SIZE (-1) otherwise.
      * When ranges are used, this might not be the actual size available. For
@@ -387,6 +354,29 @@ public abstract class Representation extends RepresentationInfo {
      * @throws IOException
      */
     public abstract InputStream getStream() throws IOException;
+
+    // [ifndef gwt] method
+    /**
+     * Converts the representation to a bytes array. Be careful when using this
+     * method as the conversion of large content to a string fully stored in
+     * memory can result in OutOfMemoryErrors being thrown.
+     * 
+     * @return The representation as a bytes array.
+     */
+    public byte[] getBytes() throws IOException {
+        byte[] result = null;
+
+        if (isEmpty()) {
+            result = new byte[0];
+        } else if (isAvailable()) {
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            write(baos);
+            baos.flush();
+            result = baos.toByteArray();
+        }
+
+        return result;
+    }
 
     // [ifndef gwt] method
     /**
@@ -458,25 +448,6 @@ public abstract class Representation extends RepresentationInfo {
     // * @return The representation as a string value.
     // */
     // public abstract String getText() throws IOException;
-
-    // [ifndef gae,gwt] method
-    /**
-     * Indicates if the representation content supports NIO selection. In this
-     * case, the
-     * {@link org.restlet.ext.nio.internal.ConnectionController#register(java.nio.channels.SelectableChannel, int, org.restlet.util.SelectionListener)}
-     * method can be called to be notified when new content is ready for
-     * reading.
-     * 
-     * @return True if the representation content supports NIO selection.
-     * @see org.restlet.ext.nio.internal.ConnectionController
-     */
-    public boolean isSelectable() {
-        try {
-            return getChannel() instanceof org.restlet.engine.io.SelectionChannel;
-        } catch (IOException e) {
-            return false;
-        }
-    }
 
     /**
      * Indicates if the representation's content is transient, which means that
@@ -566,31 +537,6 @@ public abstract class Representation extends RepresentationInfo {
      */
     public void setExpirationDate(Date expirationDate) {
         this.expirationDate = DateUtils.unmodifiable(expirationDate);
-    }
-
-    // [ifndef gae,gwt] method
-    /**
-     * Sets a listener for NIO read events. If the listener is null, it clear
-     * any existing listener.
-     * 
-     * @param readingListener
-     *            The listener for NIO read events.
-     */
-    public void setListener(org.restlet.util.ReadingListener readingListener) {
-        try {
-            org.restlet.util.SelectionRegistration sr = getRegistration();
-
-            if ((readingListener == null)) {
-                sr.setNoInterest();
-            } else {
-                sr.setReadInterest();
-            }
-
-            sr.setSelectionListener(readingListener);
-        } catch (IOException ioe) {
-            Context.getCurrentLogger().log(Level.WARNING,
-                    "Unable to register the reading listener", ioe);
-        }
     }
 
     /**

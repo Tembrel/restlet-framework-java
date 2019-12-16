@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -47,8 +38,6 @@ import java.nio.channels.Channel;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectableChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.WritableByteChannel;
 import java.util.logging.Level;
 
@@ -399,7 +388,7 @@ public class IoUtils {
                         wbc = pipe.sink();
                         representation.write(wbc);
                     } catch (IOException ioe) {
-                        Context.getCurrentLogger().log(Level.FINE,
+                        Context.getCurrentLogger().log(Level.WARNING,
                                 "Error while writing to the piped channel.",
                                 ioe);
                     } finally {
@@ -408,7 +397,7 @@ public class IoUtils {
                                 wbc.close();
                             } catch (IOException e) {
                                 Context.getCurrentLogger()
-                                        .log(Level.FINE,
+                                        .log(Level.WARNING,
                                                 "Error while closing to the piped channel.",
                                                 e);
                             }
@@ -483,53 +472,42 @@ public class IoUtils {
             final org.restlet.representation.WriterRepresentation representation)
             throws IOException {
         Reader result = null;
-        if (Edition.CURRENT != Edition.GAE) {
-            // [ifndef gae]
-            final java.io.PipedWriter pipedWriter = new java.io.PipedWriter();
+        final java.io.PipedWriter pipedWriter = new java.io.PipedWriter();
 
-            @SuppressWarnings("resource")
-            java.io.PipedReader pipedReader = new java.io.PipedReader(
-                    pipedWriter);
+        java.io.PipedReader pipedReader = new java.io.PipedReader(pipedWriter);
 
-            // Gets a thread that will handle the task of continuously
-            // writing the representation into the input side of the pipe
-            Runnable task = new org.restlet.engine.util.ContextualRunnable() {
-                public void run() {
+        // Gets a thread that will handle the task of continuously
+        // writing the representation into the input side of the pipe
+        Runnable task = new org.restlet.engine.util.ContextualRunnable() {
+            public void run() {
+                try {
+                    representation.write(pipedWriter);
+                    pipedWriter.flush();
+                } catch (IOException ioe) {
+                    Context.getCurrentLogger().log(Level.WARNING,
+                            "Error while writing to the piped reader.", ioe);
+                } finally {
                     try {
-                        representation.write(pipedWriter);
-                        pipedWriter.flush();
-                    } catch (IOException ioe) {
-                        Context.getCurrentLogger()
-                                .log(Level.WARNING,
-                                        "Error while writing to the piped reader.",
-                                        ioe);
-                    } finally {
-                        try {
-                            pipedWriter.close();
-                        } catch (IOException ioe2) {
-                            Context.getCurrentLogger().log(Level.WARNING,
-                                    "Error while closing the pipe.", ioe2);
-                        }
+                        pipedWriter.close();
+                    } catch (IOException ioe2) {
+                        Context.getCurrentLogger().log(Level.WARNING,
+                                "Error while closing the pipe.", ioe2);
                     }
                 }
-            };
-
-            org.restlet.Context context = org.restlet.Context.getCurrent();
-
-            if (context != null && context.getExecutorService() != null) {
-                context.getExecutorService().execute(task);
-            } else {
-                Engine.createThreadWithLocalVariables(task, "Restlet-IoUtils")
-                        .start();
             }
+        };
 
-            result = pipedReader;
-            // [enddef]
+        org.restlet.Context context = org.restlet.Context.getCurrent();
+
+        if (context != null && context.getExecutorService() != null) {
+            context.getExecutorService().execute(task);
         } else {
-            Context.getCurrentLogger()
-                    .log(Level.WARNING,
-                            "The GAE edition is unable to return a reader for a writer representation.");
+            Engine.createThreadWithLocalVariables(task, "Restlet-IoUtils")
+                    .start();
         }
+
+        result = pipedReader;
+
         return result;
 
     }
@@ -557,14 +535,12 @@ public class IoUtils {
      *            The readable byte channel.
      * @return An input stream based on a given readable byte channel.
      */
-    @SuppressWarnings("resource")
     public static InputStream getStream(ReadableByteChannel readableChannel) {
         InputStream result = null;
 
         if (readableChannel != null) {
             result = isBlocking(readableChannel) ? Channels
-                    .newInputStream(readableChannel)
-                    : new NbChannelInputStream(readableChannel);
+                    .newInputStream(readableChannel) : null;
         }
 
         return result;
@@ -607,54 +583,45 @@ public class IoUtils {
     public static InputStream getStream(final Representation representation) {
         InputStream result = null;
 
-        if (Edition.CURRENT != Edition.GAE) {
-            // [ifndef gae]
-            if (representation == null) {
-                return null;
-            }
+        if (representation == null) {
+            return null;
+        }
 
-            final PipeStream pipe = new PipeStream();
-            final java.io.OutputStream os = pipe.getOutputStream();
+        final PipeStream pipe = new PipeStream();
+        final java.io.OutputStream os = pipe.getOutputStream();
 
-            // Creates a thread that will handle the task of continuously
-            // writing the representation into the input side of the pipe
-            Runnable task = new org.restlet.engine.util.ContextualRunnable() {
-                public void run() {
+        // Creates a thread that will handle the task of continuously
+        // writing the representation into the input side of the pipe
+        Runnable task = new org.restlet.engine.util.ContextualRunnable() {
+            public void run() {
+                try {
+                    representation.write(os);
+                    os.flush();
+                } catch (IOException ioe) {
+                    Context.getCurrentLogger().log(Level.WARNING,
+                            "Error while writing to the piped input stream.",
+                            ioe);
+                } finally {
                     try {
-                        representation.write(os);
-                        os.flush();
-                    } catch (IOException ioe) {
-                        Context.getCurrentLogger()
-                                .log(Level.WARNING,
-                                        "Error while writing to the piped input stream.",
-                                        ioe);
-                    } finally {
-                        try {
-                            os.close();
-                        } catch (IOException ioe2) {
-                            Context.getCurrentLogger().log(Level.WARNING,
-                                    "Error while closing the pipe.", ioe2);
-                        }
+                        os.close();
+                    } catch (IOException ioe2) {
+                        Context.getCurrentLogger().log(Level.WARNING,
+                                "Error while closing the pipe.", ioe2);
                     }
                 }
-            };
-
-            org.restlet.Context context = org.restlet.Context.getCurrent();
-
-            if (context != null && context.getExecutorService() != null) {
-                context.getExecutorService().execute(task);
-            } else {
-                Engine.createThreadWithLocalVariables(task, "Restlet-IoUtils")
-                        .start();
             }
+        };
 
-            result = pipe.getInputStream();
-            // [enddef]
+        org.restlet.Context context = org.restlet.Context.getCurrent();
+
+        if (context != null && context.getExecutorService() != null) {
+            context.getExecutorService().execute(task);
         } else {
-            Context.getCurrentLogger()
-                    .log(Level.WARNING,
-                            "The GAE edition is unable to get an InputStream out of an OutputRepresentation.");
+            Engine.createThreadWithLocalVariables(task, "Restlet-IoUtils")
+                    .start();
         }
+
+        result = pipe.getInputStream();
 
         return result;
     }
@@ -667,14 +634,12 @@ public class IoUtils {
      *            The writable byte channel.
      * @return An output stream based on a given writable byte channel.
      */
-    @SuppressWarnings("resource")
     public static OutputStream getStream(WritableByteChannel writableChannel) {
         OutputStream result = null;
 
         if (writableChannel != null) {
             result = isBlocking(writableChannel) ? Channels
-                    .newOutputStream(writableChannel)
-                    : new NbChannelOutputStream(writableChannel);
+                    .newOutputStream(writableChannel) : null;
         }
 
         return result;
@@ -753,31 +718,6 @@ public class IoUtils {
         }
 
         return result;
-    }
-
-    // [ifndef gwt] method
-    /**
-     * Release the selection key, working around for bug #6403933.
-     * 
-     * @param selector
-     *            The associated selector.
-     * @param selectionKey
-     *            The used selection key.
-     * @throws IOException
-     */
-    public static void release(Selector selector, SelectionKey selectionKey)
-            throws IOException {
-        if (selectionKey != null) {
-            // The key you registered on the temporary selector
-            selectionKey.cancel();
-
-            if (selector != null) {
-                // Flush the canceled key
-                selector.selectNow();
-                SelectorFactory.returnSelector(selector);
-            }
-        }
-
     }
 
     // [ifndef gwt] method

@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -85,7 +76,18 @@ public class TaskService extends Service implements ScheduledExecutorService {
      * @author Tim Peierls
      */
     private static class RestletThreadFactory implements ThreadFactory {
+
+        /**
+         * Indicates whether or not the thread is a daemon thread. True by
+         * default.
+         */
+        private boolean daemon;
+
         final ThreadFactory factory = Executors.defaultThreadFactory();
+
+        public RestletThreadFactory(boolean daemon) {
+            this.daemon = daemon;
+        }
 
         public Thread newThread(Runnable runnable) {
             Thread t = factory.newThread(runnable);
@@ -93,6 +95,7 @@ public class TaskService extends Service implements ScheduledExecutorService {
             // Default factory is documented as producing names of the
             // form "pool-N-thread-M".
             t.setName(t.getName().replaceFirst("pool", "restlet"));
+            t.setDaemon(daemon);
             return t;
         }
     }
@@ -233,6 +236,14 @@ public class TaskService extends Service implements ScheduledExecutorService {
         };
     }
 
+    /** The core pool size defining the maximum number of threads. */
+    private volatile int corePoolSize;
+
+    /**
+     * Indicates whether or not the threads are daemon threads. True by default.
+     */
+    private volatile boolean daemon;
+
     /**
      * Allow {@link #shutdown()} and {@link #shutdownNow()} methods to
      * effectively shutdown the wrapped executor service.
@@ -241,9 +252,6 @@ public class TaskService extends Service implements ScheduledExecutorService {
 
     /** The wrapped JDK executor service. */
     private volatile ScheduledExecutorService wrapped;
-
-    /** The core pool size defining the maximum number of threads. */
-    private volatile int corePoolSize;
 
     /**
      * Constructor. Enables the service and set the core pool size to 4 by
@@ -260,7 +268,20 @@ public class TaskService extends Service implements ScheduledExecutorService {
      *            True if the service has been enabled.
      */
     public TaskService(boolean enabled) {
+        this(enabled, true);
+    }
+
+    /**
+     * Constructor. Set the core pool size to 4 by default.
+     * 
+     * @param enabled
+     *            True if the service has been enabled.
+     * @param daemon
+     *            True if the threads are created as daemon threads.
+     */
+    public TaskService(boolean enabled, boolean daemon) {
         this(enabled, 4);
+        this.daemon = daemon;
     }
 
     /**
@@ -326,7 +347,7 @@ public class TaskService extends Service implements ScheduledExecutorService {
      * @return A new thread factory.
      */
     protected ThreadFactory createThreadFactory() {
-        return new RestletThreadFactory();
+        return new RestletThreadFactory(daemon);
     }
 
     /**
@@ -454,6 +475,15 @@ public class TaskService extends Service implements ScheduledExecutorService {
             throws InterruptedException, ExecutionException, TimeoutException {
         startIfNeeded();
         return getWrapped().invokeAny(tasks, timeout, unit);
+    }
+
+    /**
+     * Indicates whether the threads are created as daemon threads.
+     * 
+     * @return True if the threads are created as daemon threads.
+     */
+    public boolean isDaemon() {
+        return daemon;
     }
 
     /**
@@ -606,6 +636,16 @@ public class TaskService extends Service implements ScheduledExecutorService {
      */
     public void setCorePoolSize(int corePoolSize) {
         this.corePoolSize = corePoolSize;
+    }
+
+    /**
+     * Indicates whether or not the threads are daemon threads. True by default.
+     * 
+     * @param daemon
+     *            True if the threads are daemon threads.
+     */
+    public void setDaemon(boolean daemon) {
+        this.daemon = daemon;
     }
 
     /**

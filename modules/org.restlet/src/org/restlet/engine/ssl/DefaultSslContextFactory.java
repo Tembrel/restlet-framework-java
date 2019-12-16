@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -42,7 +33,6 @@ import java.util.Set;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.restlet.data.Parameter;
@@ -72,7 +62,7 @@ import org.restlet.util.Series;
  * <tr>
  * <td>disabledProtocols</td>
  * <td>String (see Java Secure Socket Extension (JSSE) reference guide)</td>
- * <td>TLS</td>
+ * <td>null</td>
  * <td>Whitespace-separated list of disabled SSL/TLS protocol names and/or can
  * be specified multiple times. Used when creating SSL sockets and engines.</td>
  * </tr>
@@ -86,7 +76,7 @@ import org.restlet.util.Series;
  * <tr>
  * <td>enabledProtocols</td>
  * <td>String (see Java Secure Socket Extension (JSSE) reference guide)</td>
- * <td>TLS</td>
+ * <td>null</td>
  * <td>Whitespace-separated list of enabled SSL/TLS protocol names and/or can be
  * specified multiple times. Used when creating SSL sockets and engines.</td>
  * </tr>
@@ -99,7 +89,7 @@ import org.restlet.util.Series;
  * <tr>
  * <td>keyStorePath</td>
  * <td>String</td>
- * <td>${user.home}/.keystore</td>
+ * <td>System property "javax.net.ssl.keyStore" or ${user.home}/.keystore</td>
  * <td>SSL keystore path.</td>
  * </tr>
  * <tr>
@@ -111,7 +101,7 @@ import org.restlet.util.Series;
  * <tr>
  * <td>keyStoreType</td>
  * <td>String</td>
- * <td>JKS</td>
+ * <td>System property javax.net.ssl.keyStoreType or JKS</td>
  * <td>SSL keystore type</td>
  * </tr>
  * <tr>
@@ -154,7 +144,7 @@ import org.restlet.util.Series;
  * <tr>
  * <td>trustStorePath</td>
  * <td>String</td>
- * <td>null</td>
+ * <td>System property "javax.net.ssl.trustStore"</td>
  * <td>Path to trust store</td>
  * </tr>
  * <tr>
@@ -186,7 +176,7 @@ import org.restlet.util.Series;
  * >JSSE Reference Guide</a>.
  * </p>
  * 
- * @author Bruno Harbulot (Bruno.Harbulot@manchester.ac.uk)
+ * @author Bruno Harbulot
  * @see javax.net.ssl.SSLContext
  * @see java.security.KeyStore
  * @see <a
@@ -208,7 +198,8 @@ public class DefaultSslContextFactory extends SslContextFactory {
     private volatile String[] enabledProtocols = null;
 
     /** The name of the KeyManager algorithm. */
-    private volatile String keyManagerAlgorithm = null;
+    private volatile String keyManagerAlgorithm = System.getProperty(
+            "ssl.KeyManagerFactory.algorithm", "SunX509");
 
     /** The password for the key in the keystore (as a String). */
     private volatile char[] keyStoreKeyPassword = (System.getProperty(
@@ -224,16 +215,20 @@ public class DefaultSslContextFactory extends SslContextFactory {
             .getProperty("javax.net.ssl.keyStorePassword").toCharArray() : null;
 
     /** The path to the KeyStore file. */
-    private volatile String keyStorePath = System
-            .getProperty("javax.net.ssl.keyStore");
+    private volatile String keyStorePath = System.getProperty(
+            "javax.net.ssl.keyStore",
+            (System.getProperty("user.home") != null) ? ((System
+                    .getProperty("user.home").endsWith("/")) ? System
+                    .getProperty("user.home") + ".keystore" : System
+                    .getProperty("user.home") + "/.keystore") : null);
 
     /** The name of the keystore provider. */
     private volatile String keyStoreProvider = System
             .getProperty("javax.net.ssl.keyStoreProvider");
 
     /** The keyStore type of the keystore. */
-    private volatile String keyStoreType = System
-            .getProperty("javax.net.ssl.keyStoreType");
+    private volatile String keyStoreType = System.getProperty(
+            "javax.net.ssl.keyStoreType", "JKS");
 
     /** Indicates if we require client certificate authentication. */
     private volatile boolean needClientAuthentication = false;
@@ -245,7 +240,8 @@ public class DefaultSslContextFactory extends SslContextFactory {
     private volatile String secureRandomAlgorithm = null;
 
     /** The name of the TrustManager algorithm. */
-    private volatile String trustManagerAlgorithm = null;
+    private volatile String trustManagerAlgorithm = System.getProperty(
+            "ssl.TrustManagerFactory.algorithm", "SunX509");
 
     /** The password for the trust store keystore. */
     private volatile char[] trustStorePassword = (System
@@ -379,7 +375,7 @@ public class DefaultSslContextFactory extends SslContextFactory {
     /**
      * Creates a new {@link SSLContext} wrapper. Necessary to properly
      * initialize the {@link SSLEngine} or {@link SSLSocketFactory} or
-     * {@link SSLServerSocketFactory} created.
+     * {@link javax.net.ssl.SSLServerSocketFactory} created.
      * 
      * @param sslContext
      *            The SSL context to wrap.
@@ -530,7 +526,7 @@ public class DefaultSslContextFactory extends SslContextFactory {
     /**
      * Returns the selected SSL protocols. The selection is the subset of
      * supported protocols whose name starts with the name of of
-     * {@link #getSslProtocol()} name.
+     * {@link #getEnabledProtocols()} name.
      * 
      * @param supportedProtocols
      *            The selected SSL protocols.

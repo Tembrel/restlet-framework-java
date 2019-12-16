@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -60,7 +51,6 @@ import org.restlet.engine.adapter.ServerCall;
 import org.restlet.engine.component.ComponentContext;
 import org.restlet.ext.servlet.internal.ServletCall;
 import org.restlet.ext.servlet.internal.ServletWarClient;
-import org.restlet.representation.Representation;
 import org.restlet.routing.Route;
 import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.VirtualHost;
@@ -417,18 +407,10 @@ public class ServerServlet extends HttpServlet {
      * 
      * @return The newly created Component or null if unable to create.
      */
-
-    /**
-     * Creates the single Component used by this Servlet.
-     * 
-     * @return The newly created Component or null if unable to create.
-     */
     protected Component createComponent() {
-        // Detect both customized Component and configuration with restlet.xml
-        // file.
-        Client warClient = createWarClient(new Context(), getServletConfig());
+        // Detect customized Component
         String componentClassName = getInitParameter(COMPONENT_KEY, null);
-        Class<?> targetClass = Component.class;
+        Class<?> targetClass = null;
         Component component = null;
 
         if (componentClassName != null) {
@@ -439,51 +421,36 @@ public class ServerServlet extends HttpServlet {
                         + componentClassName, e);
             }
         }
+        log("[Restlet] ServerServlet: component class is " + componentClassName);
 
-        // Look for the Component XML configuration file.
-        Response response = warClient.handle(new Request(Method.GET,
-                "war:///WEB-INF/restlet.xml"));
-
-        try {
-            log("[Restlet] ServerServlet: component class is "
-                    + componentClassName);
-            if (response.getStatus().isSuccess()
-                    && response.isEntityAvailable()) {
+        if (targetClass != null) {
+            try {
                 @SuppressWarnings("unchecked")
                 Constructor<? extends Component> ctor = ((Class<? extends Component>) targetClass)
-                        .getConstructor(Representation.class);
+                        .getConstructor();
 
-                log("[Restlet] ServerServlet: configuring component from war:///WEB-INF/restlet.xml");
-                component = (Component) ctor.newInstance(response.getEntity());
-            } else {
-                component = (Component) targetClass.newInstance();
+                log("[Restlet] ServerServlet: instantiating custom component");
+                component = (Component) ctor.newInstance();
+            } catch (IllegalAccessException e) {
+                log("[Restlet] ServerServlet couldn't instantiate the target class. Please check that you have proper access rights to "
+                        + componentClassName, e);
+            } catch (InvocationTargetException e) {
+                log("[Restlet] ServerServlet encountered an exception instantiating the target class "
+                        + componentClassName, e.getTargetException());
+            } catch (InstantiationException e) {
+                log(String.format(
+                        "[Restlet] ServerServlet couldn't instantiate the target class. Please check that %s has %s.",
+                        componentClassName, "an empty constructor"), e);
+            } catch (NoSuchMethodException e) {
+                log(String.format(
+                        "[Restlet] ServerServlet couldn't instantiate the target class. Please check that %s has %s.",
+                        componentClassName, "an empty constructor"), e);
             }
-        } catch (IllegalAccessException e) {
-            log("[Restlet] ServerServlet couldn't instantiate the target class. Please check that you have proper access rights to "
-                    + componentClassName, e);
-        } catch (InvocationTargetException e) {
-            log("[Restlet] ServerServlet encountered an exception instantiating the target class "
-                    + componentClassName, e.getTargetException());
-        } catch (InstantiationException e) {
-            log(String.format(
-                    "[Restlet] ServerServlet couldn't instantiate the target class. Please check that %s has %s.",
-                    componentClassName,
-                    ((response.getStatus().isSuccess()) ? "a constructor taking a Representation as single parameter"
-                            : "an empty constructor")), e);
-        } catch (NoSuchMethodException e) {
-            log(String.format(
-                    "[Restlet] ServerServlet couldn't instantiate the target class. Please check that %s has %s.",
-                    componentClassName,
-                    ((response.getStatus().isSuccess()) ? "a constructor taking Representation as single parameter"
-                            : "an empty constructor")), e);
         }
 
         // Create the default Component
         if (component == null) {
             component = new Component();
-
-            // The status service is disabled by default.
-            component.getStatusService().setEnabled(false);
 
             // Define the list of supported client protocols.
             final String clientProtocolsString = getInitParameter(CLIENTS_KEY,
@@ -527,6 +494,11 @@ public class ServerServlet extends HttpServlet {
                     this.getLocalAddr(request), this.getLocalPort(request),
                     component);
             result = new HttpServerHelper(server);
+
+            // Change the default adapter
+            Context serverContext = server.getContext();
+            serverContext.getParameters().add("adapter",
+                    "org.restlet.ext.servlet.internal.ServletServerAdapter");
 
             // Attach the hosted application(s) to the right path
             String uriPattern = this.getContextPath(request)

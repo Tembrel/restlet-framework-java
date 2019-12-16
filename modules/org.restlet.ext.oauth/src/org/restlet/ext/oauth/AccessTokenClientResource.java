@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -33,8 +24,8 @@
 
 package org.restlet.ext.oauth;
 
-import org.restlet.ext.oauth.internal.Token;
 import java.io.IOException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.restlet.Response;
@@ -45,6 +36,7 @@ import org.restlet.data.Reference;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.ext.oauth.internal.Scopes;
+import org.restlet.ext.oauth.internal.Token;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ClientResource;
 
@@ -57,11 +49,69 @@ import org.restlet.resource.ClientResource;
 public class AccessTokenClientResource extends ClientResource implements
         OAuthResourceDefs {
 
+    private static class TokenResponse implements Token {
+
+        public static TokenResponse parseResponse(JSONObject result)
+                throws JSONException {
+            TokenResponse token = new TokenResponse();
+            token.accessToken = result.getString(ACCESS_TOKEN);
+            token.tokenType = result.getString(TOKEN_TYPE);
+            if (result.has(EXPIRES_IN)) {
+                token.expirePeriod = result.getInt(EXPIRES_IN);
+            }
+            if (result.has(REFRESH_TOKEN)) {
+                token.refreshToken = result.getString(REFRESH_TOKEN);
+            }
+            if (result.has(SCOPE)) {
+                token.scope = Scopes.parseScope(result.getString(SCOPE));
+            }
+            return token;
+        }
+
+        private String accessToken;
+
+        private Integer expirePeriod;
+
+        private String refreshToken;
+
+        private String[] scope;
+
+        private String tokenType;
+
+        public String getAccessToken() {
+            return accessToken;
+        }
+
+        public int getExpirePeriod() {
+            if (expirePeriod == null) {
+                throw new IllegalStateException("expires_in not included.");
+            }
+            return expirePeriod;
+        }
+
+        public String getRefreshToken() {
+            return refreshToken;
+        }
+
+        public String[] getScope() {
+            return scope;
+        }
+
+        public String getTokenType() {
+            return tokenType;
+        }
+
+        @SuppressWarnings("unused")
+        public boolean isExpirePeriodAvailable() {
+            return expirePeriod != null;
+        }
+    }
+
+    private ChallengeScheme authenticationScheme;
+
     private String clientId;
 
     private String clientSecret;
-
-    private ChallengeScheme authenticationScheme;
 
     public AccessTokenClientResource(Reference tokenURI) {
         super(tokenURI);
@@ -101,22 +151,6 @@ public class AccessTokenClientResource extends ClientResource implements
         return result;
     }
 
-    public void setClientCredentials(String clientId, String clientSecret) {
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-    }
-
-    public void setAuthenticationMethod(ChallengeScheme scheme) {
-        this.authenticationScheme = scheme;
-    }
-
-    protected void setupBodyClientCredentials(OAuthParameters parameters) {
-        parameters.add(CLIENT_ID, clientId);
-        if (clientSecret != null) {
-            parameters.add(CLIENT_SECRET, clientSecret);
-        }
-    }
-
     public Token requestToken(OAuthParameters parameters)
             throws OAuthException, IOException, JSONException {
         if (authenticationScheme == null) {
@@ -147,61 +181,19 @@ public class AccessTokenClientResource extends ClientResource implements
         return token;
     }
 
-    private static class TokenResponse implements Token {
+    public void setAuthenticationMethod(ChallengeScheme scheme) {
+        this.authenticationScheme = scheme;
+    }
 
-        private String accessToken;
+    public void setClientCredentials(String clientId, String clientSecret) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+    }
 
-        private String tokenType;
-
-        private Integer expirePeriod;
-
-        private String refreshToken;
-
-        private String[] scope;
-
-        public static TokenResponse parseResponse(JSONObject result)
-                throws JSONException {
-            TokenResponse token = new TokenResponse();
-            token.accessToken = result.getString(ACCESS_TOKEN);
-            token.tokenType = result.getString(TOKEN_TYPE);
-            if (result.has(EXPIRES_IN)) {
-                token.expirePeriod = result.getInt(EXPIRES_IN);
-            }
-            if (result.has(REFRESH_TOKEN)) {
-                token.refreshToken = result.getString(REFRESH_TOKEN);
-            }
-            if (result.has(SCOPE)) {
-                token.scope = Scopes.parseScope(result.getString(SCOPE));
-            }
-            return token;
-        }
-
-        public String getAccessToken() {
-            return accessToken;
-        }
-
-        public String getTokenType() {
-            return tokenType;
-        }
-
-        @SuppressWarnings("unused")
-        public boolean isExpirePeriodAvailable() {
-            return expirePeriod != null;
-        }
-
-        public int getExpirePeriod() {
-            if (expirePeriod == null) {
-                throw new IllegalStateException("expires_in not included.");
-            }
-            return expirePeriod;
-        }
-
-        public String getRefreshToken() {
-            return refreshToken;
-        }
-
-        public String[] getScope() {
-            return scope;
+    protected void setupBodyClientCredentials(OAuthParameters parameters) {
+        parameters.add(CLIENT_ID, clientId);
+        if (clientSecret != null) {
+            parameters.add(CLIENT_SECRET, clientSecret);
         }
     }
 }

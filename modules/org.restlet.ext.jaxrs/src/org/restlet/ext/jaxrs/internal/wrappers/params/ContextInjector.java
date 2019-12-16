@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -121,6 +112,29 @@ public class ContextInjector {
                 InvocationTargetException {
             this.injectionAim.injectInto(resource, this.injectable,
                     allMustBeAvailable);
+        }
+    }
+
+    /**
+     * @author Stephan Koops
+     */
+    private static final class ExtendedUriInfoInjector implements Injector {
+
+        private final InjectionAim aim;
+
+        private final ThreadLocalizedExtendedUriInfo uriInfo;
+
+        ExtendedUriInfoInjector(InjectionAim aim,
+                ThreadLocalizedContext tlContext) {
+            this.aim = aim;
+            this.uriInfo = new ThreadLocalizedExtendedUriInfo(tlContext);
+        }
+
+        public void injectInto(Object resource, boolean allMustBeAvailable)
+                throws IllegalArgumentException, InjectException,
+                InvocationTargetException {
+            this.uriInfo.saveStateForCurrentThread(allMustBeAvailable);
+            this.aim.injectInto(resource, this.uriInfo, allMustBeAvailable);
         }
     }
 
@@ -234,8 +248,8 @@ public class ContextInjector {
         public void injectInto(Object resource, boolean allMustBeAvailable)
                 throws IllegalArgumentException, InjectException,
                 InvocationTargetException {
-            Util.inject(resource, this.fieldOrBeanSetter, this.iog
-                    .getParamValue());
+            Util.inject(resource, this.fieldOrBeanSetter,
+                    this.iog.getParamValue());
         }
     }
 
@@ -251,29 +265,6 @@ public class ContextInjector {
         UriInfoInjector(InjectionAim aim, ThreadLocalizedContext tlContext) {
             this.aim = aim;
             this.uriInfo = new ThreadLocalizedUriInfo(tlContext);
-        }
-
-        public void injectInto(Object resource, boolean allMustBeAvailable)
-                throws IllegalArgumentException, InjectException,
-                InvocationTargetException {
-            this.uriInfo.saveStateForCurrentThread(allMustBeAvailable);
-            this.aim.injectInto(resource, this.uriInfo, allMustBeAvailable);
-        }
-    }
-
-    /**
-     * @author Stephan Koops
-     */
-    private static final class ExtendedUriInfoInjector implements Injector {
-
-        private final InjectionAim aim;
-
-        private final ThreadLocalizedExtendedUriInfo uriInfo;
-
-        ExtendedUriInfoInjector(InjectionAim aim,
-                ThreadLocalizedContext tlContext) {
-            this.aim = aim;
-            this.uriInfo = new ThreadLocalizedExtendedUriInfo(tlContext);
         }
 
         public void injectInto(Object resource, boolean allMustBeAvailable)

@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -47,40 +38,29 @@ import org.restlet.security.Role;
  */
 public class Scopes {
 
-    public static String toScope(List<Role> roles)
-            throws IllegalArgumentException {
-        if (roles == null || roles.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (Role r : roles) {
-            String scope = toScope(r);
-            sb.append(' ');
-            sb.append(scope);
-
-        }
-        return sb.substring(1);
+    public static boolean isIdentical(String[] a, String[] b) {
+        List<String> al = Arrays.asList(a);
+        List<String> bl = Arrays.asList(b);
+        return al.containsAll(bl) && bl.containsAll(al);
     }
 
-    public static String toString(String[] scopes) {
-        StringBuilder sb = new StringBuilder();
-        for (String scope : scopes) {
-            sb.append(' ');
-            sb.append(scope);
+    public static String[] parseScope(List<Role> roles) {
+        String[] scopes = new String[roles.size()];
+        for (int i = 0; i < roles.size(); i++) {
+            scopes[i] = roles.get(i).getName();
         }
-        return sb.substring(1);
+        return scopes;
     }
 
-    public static String toScope(Role r) throws IllegalArgumentException {
-        String rname = r.getName();
-        if (rname == null)
-            throw new IllegalArgumentException("Role name cannot be null");
-        rname = rname.trim();
-        if (rname.length() < 1)
-            throw new IllegalArgumentException("Role name cannot be empty");
-        else if (rname.contains(" "))
-            throw new IllegalArgumentException("Role name cannot contain space");
-        return rname;
+    public static String[] parseScope(String scopes) {
+        if (scopes != null && scopes.length() > 0) {
+            StringTokenizer st = new StringTokenizer(scopes, " ");
+            String[] scope = new String[st.countTokens()];
+            for (int i = 0; st.hasMoreTokens(); i++)
+                scope[i] = st.nextToken();
+            return scope;
+        }
+        return new String[0];
     }
 
     @SuppressWarnings("deprecation")
@@ -100,28 +80,39 @@ public class Scopes {
         return toRet;
     }
 
-    public static String[] parseScope(String scopes) {
-        if (scopes != null && scopes.length() > 0) {
-            StringTokenizer st = new StringTokenizer(scopes, " ");
-            String[] scope = new String[st.countTokens()];
-            for (int i = 0; st.hasMoreTokens(); i++)
-                scope[i] = st.nextToken();
-            return scope;
+    public static String toScope(List<Role> roles)
+            throws IllegalArgumentException {
+        if (roles == null || roles.isEmpty()) {
+            return "";
         }
-        return new String[0];
+        StringBuilder sb = new StringBuilder();
+        for (Role r : roles) {
+            String scope = toScope(r);
+            sb.append(' ');
+            sb.append(scope);
+
+        }
+        return sb.substring(1);
     }
 
-    public static String[] parseScope(List<Role> roles) {
-        String[] scopes = new String[roles.size()];
-        for (int i = 0; i < roles.size(); i++) {
-            scopes[i] = roles.get(i).getName();
-        }
-        return scopes;
+    public static String toScope(Role r) throws IllegalArgumentException {
+        String rname = r.getName();
+        if (rname == null)
+            throw new IllegalArgumentException("Role name cannot be null");
+        rname = rname.trim();
+        if (rname.length() < 1)
+            throw new IllegalArgumentException("Role name cannot be empty");
+        else if (rname.contains(" "))
+            throw new IllegalArgumentException("Role name cannot contain space");
+        return rname;
     }
 
-    public static boolean isIdentical(String[] a, String[] b) {
-        List<String> al = Arrays.asList(a);
-        List<String> bl = Arrays.asList(b);
-        return al.containsAll(bl) && bl.containsAll(al);
+    public static String toString(String[] scopes) {
+        StringBuilder sb = new StringBuilder();
+        for (String scope : scopes) {
+            sb.append(' ');
+            sb.append(scope);
+        }
+        return sb.substring(1);
     }
 }

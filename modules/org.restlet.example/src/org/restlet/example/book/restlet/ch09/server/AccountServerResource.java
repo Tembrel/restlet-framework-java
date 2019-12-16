@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -45,48 +36,48 @@ import org.restlet.resource.ResourceException;
  * Implementation of a mail account resource.
  */
 public class AccountServerResource extends WadlServerResource implements
-		AccountResource {
+        AccountResource {
 
-	/** The account identifier. */
-	private int accountId;
+    /** The account identifier. */
+    private int accountId;
 
-	@Override
-	protected RepresentationInfo describe(MethodInfo methodInfo,
-			Class<?> representationClass, Variant variant) {
-		RepresentationInfo result = new RepresentationInfo(variant);
-		result.setReference("account");
-		return result;
-	}
+    @Override
+    protected RepresentationInfo describe(MethodInfo methodInfo,
+            Class<?> representationClass, Variant variant) {
+        RepresentationInfo result = new RepresentationInfo(variant);
+        result.setReference("account");
+        return result;
+    }
 
-	/**
-	 * Retrieve the account identifier based on the URI path variable
-	 * "accountId" declared in the URI template attached to the application
-	 * router.
-	 */
-	@Override
-	protected void doInit() throws ResourceException {
-		String accountIdAttribute = getAttribute("accountId");
+    /**
+     * Retrieve the account identifier based on the URI path variable
+     * "accountId" declared in the URI template attached to the application
+     * router.
+     */
+    @Override
+    protected void doInit() throws ResourceException {
+        String accountIdAttribute = getAttribute("accountId");
 
-		if (accountIdAttribute != null) {
-			this.accountId = Integer.parseInt(accountIdAttribute);
-			setName("Resource for mail account \"" + this.accountId + "\"");
-			setDescription("The resource describing the mail account number \""
-					+ this.accountId + "\"");
-		} else {
-			setName("Mail account resource");
-			setDescription("The resource describing a mail account");
-		}
-	}
+        if (accountIdAttribute != null) {
+            this.accountId = Integer.parseInt(accountIdAttribute);
+            setName("Resource for mail account \"" + this.accountId + "\"");
+            setDescription("The resource describing the mail account number \""
+                    + this.accountId + "\"");
+        } else {
+            setName("Mail account resource");
+            setDescription("The resource describing a mail account");
+        }
+    }
 
-	public void remove() {
-		AccountsServerResource.getAccounts().remove(this.accountId);
-	}
+    public void remove() {
+        AccountsServerResource.getAccounts().remove(this.accountId);
+    }
 
-	public AccountRepresentation represent() {
-		return AccountsServerResource.getAccounts().get(this.accountId);
-	}
+    public AccountRepresentation represent() {
+        return AccountsServerResource.getAccounts().get(this.accountId);
+    }
 
-	public void store(AccountRepresentation account) {
-		AccountsServerResource.getAccounts().set(this.accountId, account);
-	}
+    public void store(AccountRepresentation account) {
+        AccountsServerResource.getAccounts().set(this.accountId, account);
+    }
 }

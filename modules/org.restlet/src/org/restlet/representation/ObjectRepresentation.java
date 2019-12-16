@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -33,8 +24,6 @@
 
 package org.restlet.representation;
 
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -51,19 +40,20 @@ import org.restlet.data.MediaType;
  * case, it handles representations having the following media type:
  * {@link MediaType#APPLICATION_JAVA_OBJECT}
  * ("application/x-java-serialized-object"). It also supports textual
- * representations of JavaBeans using the {@link XMLEncoder} and
- * {@link XMLDecoder} classes. In this case, it handles representations having
- * the following media type: {@link MediaType#APPLICATION_JAVA_OBJECT_XML}
+ * representations of JavaBeans using the {@link java.beans.XMLEncoder} and
+ * {@link java.beans.XMLDecoder} classes. In this case, it handles
+ * representations having the following media type:
+ * {@link MediaType#APPLICATION_JAVA_OBJECT_XML}
  * ("application/x-java-serialized-object+xml").<br>
  * <br>
- * SECURITY WARNING: The usage of {@link XMLDecoder} when deserializing XML
- * presentations from untrusted sources can lead to malicious attacks. As
- * pointed <a href=
+ * SECURITY WARNING: The usage of {@link java.beans.XMLDecoder} when
+ * deserializing XML presentations from untrusted sources can lead to malicious
+ * attacks. As pointed <a href=
  * "http://blog.diniscruz.com/2013/08/using-xmldecoder-to-execute-server-side.html"
- * >here</a>, the {@link XMLDecoder} is able to force the JVM to execute
- * unwanted Java code described inside the XML file. Thus, the support of such
- * format has been disabled by default. You can activate this support by turning
- * on the following system property:
+ * >here</a>, the {@link java.beans.XMLDecoder} is able to force the JVM to
+ * execute unwanted Java code described inside the XML file. Thus, the support
+ * of such format has been disabled by default. You can activate this support by
+ * turning on the following system property:
  * org.restlet.representation.ObjectRepresentation.VARIANT_OBJECT_XML_SUPPORTED.<br>
  * <br>
  * SECURITY WARNING: The usage of {@link ObjectInputStream} when deserializing
@@ -222,6 +212,7 @@ public class ObjectRepresentation<T extends Serializable> extends
             this.object = (T) decoder.readObject();
 
             if (is.read() != -1) {
+                decoder.close();
                 throw new IOException(
                         "The input stream has not been fully read.");
             }

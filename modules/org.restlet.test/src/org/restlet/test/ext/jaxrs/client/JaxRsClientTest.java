@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -44,7 +35,6 @@ import javax.ws.rs.core.Application;
 import org.restlet.engine.Engine;
 import org.restlet.engine.converter.ConverterHelper;
 import org.restlet.ext.jaxrs.JaxRsClientResource;
-import org.restlet.ext.xstream.XstreamConverter;
 import org.restlet.test.ext.jaxrs.services.echo.EchoResource;
 import org.restlet.test.ext.jaxrs.services.echo.EchoResourceImpl;
 import org.restlet.test.ext.jaxrs.services.tests.JaxRsTestCase;
@@ -131,6 +121,16 @@ public class JaxRsClientTest extends JaxRsTestCase {
         });
     }
 
+    public void testEchoStringFormParam() throws Exception {
+        performEchoTest(new EchoTest() {
+            @Override
+            public void performTest(EchoResource echoResource) {
+                assertEquals("formparam",
+                        echoResource.echoStringFormParam("formparam"));
+            }
+        });
+    }
+
     // TODO - regex path params are not quite ready
     // public void testRegexPathParam() throws Exception {
     // performEchoTest(new EchoTest() {
@@ -146,12 +146,12 @@ public class JaxRsClientTest extends JaxRsTestCase {
             throws InterruptedException {
 
         // there are a bunch of converters registered in the unit test project,
-        // we only want xstream
+        // we only want jackson
         List<ConverterHelper> registeredConverters = Engine.getInstance()
                 .getRegisteredConverters();
         for (int i = registeredConverters.size() - 1; i >= 0; i--) {
             ConverterHelper converterHelper = registeredConverters.get(i);
-            if (!(converterHelper instanceof XstreamConverter)) {
+            if (!(converterHelper instanceof org.restlet.ext.jackson.JacksonConverter)) {
                 registeredConverters.remove(i);
             }
         }

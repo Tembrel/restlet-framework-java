@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -34,16 +25,12 @@
 package org.restlet.ext.json;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
 
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.engine.io.IoUtils;
 import org.restlet.representation.Representation;
-import org.restlet.util.WrapperRepresentation;
+import org.restlet.representation.WriterRepresentation;
 
 /**
  * Wrappers that adds a JSONP header and footer to JSON representations. The
@@ -51,13 +38,17 @@ import org.restlet.util.WrapperRepresentation;
  * single origin policies.
  * 
  * @author Mark Kharitonov
+ * @author Jerome Louvel
  */
-public class JsonpRepresentation extends WrapperRepresentation {
+public class JsonpRepresentation extends WriterRepresentation {
     /** The name of the JavaScript callback method. */
     private final String callback;
 
     /** The actual status code. */
     private final Status status;
+
+    /** The wrapped JSON representation. */
+    private final Representation wrappedRepresentation;
 
     /**
      * Constructor.
@@ -70,9 +61,10 @@ public class JsonpRepresentation extends WrapperRepresentation {
      */
     public JsonpRepresentation(String callback, Status status,
             Representation wrappedRepresentation) {
-        super(wrappedRepresentation);
+        super(MediaType.APPLICATION_JAVASCRIPT);
         this.callback = callback;
         this.status = status;
+        this.wrappedRepresentation = wrappedRepresentation;
     }
 
     /**
@@ -85,24 +77,20 @@ public class JsonpRepresentation extends WrapperRepresentation {
     }
 
     @Override
-    public ReadableByteChannel getChannel() throws IOException {
-        return IoUtils.getChannel(getStream());
-    }
-
-    @Override
-    public MediaType getMediaType() {
-        return MediaType.APPLICATION_JAVASCRIPT;
-    }
-
-    @Override
     public long getSize() {
-        long result = super.getSize();
+        long result = wrappedRepresentation.getSize();
 
         if (result > 0
-                && MediaType.APPLICATION_JSON.equals(super.getMediaType())) {
-            return result + getCallback().length()
-                    + "({status:,body:});".length()
-                    + Integer.toString(getStatus().getCode()).length();
+                && MediaType.APPLICATION_JSON.equals(wrappedRepresentation
+                        .getMediaType())) {
+            try {
+                java.io.StringWriter sw = new java.io.StringWriter();
+                write(sw);
+                sw.flush();
+                return sw.toString().length();
+            } catch (IOException e) {
+                return UNKNOWN_SIZE;
+            }
         }
 
         return UNKNOWN_SIZE;
@@ -118,54 +106,28 @@ public class JsonpRepresentation extends WrapperRepresentation {
     }
 
     @Override
-    public InputStream getStream() throws IOException {
-        return IoUtils.getStream(this);
-    }
-
-    @Override
-    public String getText() throws IOException {
-        return IoUtils.toString(getStream());
-    }
-
-    @Override
     public void write(java.io.Writer writer) throws IOException {
-        OutputStream os = IoUtils.getStream(writer, getCharacterSet());
-        write(os);
-        os.flush();
-    }
+        writer.write(getCallback());
+        writer.write("({\"status\":");
+        writer.write(Integer.toString(getStatus().getCode()));
+        writer.write(",\"body\":");
 
-    /**
-     * Writes the callback method wrapper first, including the actual HTTP
-     * status code, then the existing JSON content as a body.
-     */
-    @Override
-    public void write(OutputStream outputStream) throws IOException {
-        outputStream.write(getCallback().getBytes());
-        outputStream.write("({status:".getBytes());
-        outputStream.write(Integer.toString(getStatus().getCode()).getBytes());
-        outputStream.write(",body:".getBytes());
-
-        if (MediaType.APPLICATION_JSON.equals(super.getMediaType())) {
-            IoUtils.copy(super.getStream(), outputStream);
+        if (MediaType.APPLICATION_JSON.equals(wrappedRepresentation
+                .getMediaType())) {
+            IoUtils.copy(wrappedRepresentation.getReader(), writer);
         } else {
-            outputStream.write("'".getBytes());
-            String text = super.getText();
+            writer.write("\"");
+            String text = wrappedRepresentation.getText();
 
-            if (text.indexOf('\'') >= 0) {
-                text = text.replace("\'", "\\\'");
+            if (text.indexOf('\"') >= 0) {
+                text = text.replace("\"", "\\\"");
             }
 
-            outputStream.write(text.getBytes());
-            outputStream.write("'".getBytes());
+            writer.write(text);
+            writer.write("\"");
         }
 
-        outputStream.write("});".getBytes());
+        writer.write("});");
     }
 
-    @Override
-    public void write(WritableByteChannel writableChannel) throws IOException {
-        OutputStream os = IoUtils.getStream(writableChannel);
-        write(os);
-        os.flush();
-    }
 }

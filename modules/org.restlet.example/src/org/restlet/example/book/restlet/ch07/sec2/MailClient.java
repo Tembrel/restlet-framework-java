@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -33,14 +24,9 @@
 
 package org.restlet.example.book.restlet.ch07.sec2;
 
-import java.util.List;
-
 import org.restlet.ext.atom.Entry;
 import org.restlet.ext.atom.Feed;
 import org.restlet.resource.ClientResource;
-
-import com.sun.syndication.feed.synd.SyndEntry;
-import com.sun.syndication.feed.synd.SyndFeed;
 
 /**
  * Mail client updating a mail by submitting a form.
@@ -60,16 +46,5 @@ public class MailClient {
             System.out.println("Summary: " + entry.getSummary());
         }
 
-        // Display the retrieved RSS feed and entries
-        SyndFeed rssFeed = mailClient.get(SyndFeed.class);
-        System.out.println("\nRSS feed: " + rssFeed.getTitle() + "\n");
-
-        @SuppressWarnings("unchecked")
-        List<SyndEntry> entries = (List<SyndEntry>) rssFeed.getEntries();
-
-        for (SyndEntry entry : entries) {
-            System.out.println("Title  : " + entry.getTitle());
-            System.out.println("Summary: " + entry.getDescription().getValue());
-        }
     }
 }

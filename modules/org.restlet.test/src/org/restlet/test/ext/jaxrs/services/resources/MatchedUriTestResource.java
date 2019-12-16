@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -55,7 +46,8 @@ public class MatchedUriTestResource {
 
     @GET
     @Produces("text/plain")
-    public String get(@Context UriInfo uriInfo) {
+    public String get(@Context
+    UriInfo uriInfo) {
         final int uriSize = uriInfo.getMatchedURIs().size();
         final int resourcesSize = uriInfo.getMatchedResources().size();
         return uriSize + "\n" + resourcesSize;
@@ -64,7 +56,8 @@ public class MatchedUriTestResource {
     @GET
     @Produces("text/plain")
     @Path("sub")
-    public String getResources(@Context UriInfo uriInfo) {
+    public String getResources(@Context
+    UriInfo uriInfo) {
         final StringBuilder stb = new StringBuilder();
         final List<Object> resources = uriInfo.getMatchedResources();
         stb.append(resources.size());

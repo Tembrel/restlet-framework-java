@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -52,6 +43,7 @@ import org.restlet.data.CharacterSet;
 import org.restlet.data.ClientInfo;
 import org.restlet.data.Encoding;
 import org.restlet.data.Form;
+import org.restlet.data.Header;
 import org.restlet.data.Language;
 import org.restlet.data.MediaType;
 import org.restlet.data.Metadata;
@@ -59,7 +51,6 @@ import org.restlet.data.Method;
 import org.restlet.data.Preference;
 import org.restlet.data.Reference;
 import org.restlet.engine.Engine;
-import org.restlet.engine.header.Header;
 import org.restlet.engine.header.HeaderConstants;
 import org.restlet.engine.header.PreferenceReader;
 import org.restlet.engine.io.IoUtils;
@@ -256,7 +247,7 @@ public class TunnelFilter extends Filter {
      *            unconditionnaly set.
      * @param newHeaderName
      *            The name of the property that gives the replacement value.
-     * @return
+     * @return The list of new header values.
      */
     private List<HeaderReplacer> getheaderReplacers(
             final URL userAgentPropertiesUrl, String oldHeaderName,
@@ -461,7 +452,7 @@ public class TunnelFilter extends Filter {
         Reference resourceRef = request.getResourceRef();
 
         if (resourceRef.hasQuery()) {
-            Form query = resourceRef.getQueryAsForm();
+            Form query = resourceRef.getQueryAsForm(CharacterSet.UTF_8);
 
             // Tunnel the request method
             Method method = request.getMethod();
@@ -552,7 +543,7 @@ public class TunnelFilter extends Filter {
 
             // Update the query if it has been modified
             if (queryModified) {
-                request.getResourceRef().setQuery(query.getQueryString(null));
+                request.getResourceRef().setQuery(query.getQueryString(CharacterSet.UTF_8));
             }
         }
 

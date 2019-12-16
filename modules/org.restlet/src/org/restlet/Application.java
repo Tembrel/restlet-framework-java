@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -36,6 +27,7 @@ package org.restlet;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Filter;
+import java.util.logging.Level;
 
 import org.restlet.engine.Engine;
 import org.restlet.engine.application.ApplicationHelper;
@@ -114,6 +106,9 @@ public class Application extends Restlet {
         CURRENT.set(application);
     }
 
+    /** Indicates if the debugging mode is enabled. */
+    private volatile boolean debugging;
+
     /** The helper provided by the implementation. */
     private volatile ApplicationHelper helper;
 
@@ -157,19 +152,25 @@ public class Application extends Restlet {
             this.helper.setContext(context);
         }
 
+        ConnegService connegService = new ConnegService();
+        ConverterService converterService = new ConverterService();
+        MetadataService metadataService = new MetadataService();
+
+        this.debugging = false;
         this.outboundRoot = null;
         this.inboundRoot = null;
         this.roles = new CopyOnWriteArrayList<Role>();
         this.services = new ServiceList(context);
         this.services.add(new TunnelService(true, true));
-        this.services.add(new StatusService());
+        this.services.add(new StatusService(true, converterService,
+                metadataService, connegService));
         this.services.add(new DecoderService());
         this.services.add(new EncoderService(false));
         this.services.add(new RangeService());
         this.services.add(new ConnectorService());
-        this.services.add(new ConnegService());
-        this.services.add(new ConverterService());
-        this.services.add(new MetadataService());
+        this.services.add(connegService);
+        this.services.add(converterService);
+        this.services.add(metadataService);
 
         // [ifndef gae]
         this.services.add(new org.restlet.service.TaskService(false));
@@ -389,6 +390,15 @@ public class Application extends Restlet {
     }
 
     /**
+     * Indicates if the debugging mode is enabled. True by default.
+     * 
+     * @return True if the debugging mode is enabled.
+     */
+    public boolean isDebugging() {
+        return debugging;
+    }
+
+    /**
      * Sets the connector service.
      * 
      * @param connectorService
@@ -423,6 +433,16 @@ public class Application extends Restlet {
      */
     public void setConverterService(ConverterService converterService) {
         getServices().set(converterService);
+    }
+
+    /**
+     * Indicates if the debugging mode is enabled.
+     * 
+     * @param debugging
+     *            True if the debugging mode is enabled.
+     */
+    public void setDebugging(boolean debugging) {
+        this.debugging = debugging;
     }
 
     /**
@@ -572,6 +592,16 @@ public class Application extends Restlet {
     @Override
     public synchronized void start() throws Exception {
         if (isStopped()) {
+            if (isDebugging()) {
+                getLogger().log(
+                        Level.INFO,
+                        "Starting " + getClass().getName()
+                                + " application in debug mode");
+            } else {
+                getLogger().log(Level.INFO,
+                        "Starting " + getClass().getName() + " application");
+            }
+
             if (getHelper() != null) {
                 getHelper().start();
             }

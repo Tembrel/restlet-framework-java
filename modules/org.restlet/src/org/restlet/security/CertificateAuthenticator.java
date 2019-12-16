@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -52,8 +43,8 @@ import org.restlet.data.Status;
  * Principal of its subject to the list of principals in the request's
  * ClientInfo. It also sets the user to be a new User based on this Principal.
  * 
- * {@link #getPrincipals(List)} and {@link #getUser(Principal)} can be overridden
- * to change the default behavior.
+ * {@link #getPrincipals(List)} and {@link #getUser(Principal)} can be
+ * overridden to change the default behavior.
  * 
  * @author Bruno Harbulot (bruno/distributedmatter.net)
  */
@@ -121,7 +112,7 @@ public class CertificateAuthenticator extends Authenticator {
      * 
      * It uses the certificate chain in the request's
      * "org.restlet.https.clientCertificates" attribute, adds the principal
-     * returned from this chain by {@link #getPrincipal(List)} to the request's
+     * returned from this chain by {@link #getPrincipals(List)} to the request's
      * ClientInfo and set the user to the result of {@link #getUser(Principal)}
      * if that user is non-null.
      * 

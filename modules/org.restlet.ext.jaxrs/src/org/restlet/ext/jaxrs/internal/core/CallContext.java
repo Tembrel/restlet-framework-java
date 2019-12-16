@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -998,7 +989,7 @@ public class CallContext implements javax.ws.rs.core.Request, HttpHeaders,
         if (this.queryParametersDecoded == null) {
             this.queryParametersDecoded = UnmodifiableMultivaluedMap
                     .getFromSeries(this.referenceOriginal.getQueryAsForm(),
-                            false);
+                            true);
         }
         return this.queryParametersDecoded;
     }
@@ -1009,12 +1000,15 @@ public class CallContext implements javax.ws.rs.core.Request, HttpHeaders,
      * @param decode
      *            controls whether sequences of escaped octets in parameter
      *            names and values are decoded (true) or not (false).
+     * @param caseSensitive
+     *          should the parameter name should keep their case, set to true 
      * @return an unmodifiable map of query parameter names and values
      * @throws java.lang.IllegalStateException
      *             if called outside the scope of a request
      * @see UriInfo#getQueryParameters(boolean)
      */
-    public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
+    public MultivaluedMap<String, String> getQueryParameters(boolean decode, 
+            boolean caseSensitive) {
         if (decode) {
             return getQueryParameters();
         }
@@ -1023,7 +1017,7 @@ public class CallContext implements javax.ws.rs.core.Request, HttpHeaders,
             Form queryForm = Converter.toFormEncoded(this.referenceOriginal
                     .getQuery());
             this.queryParametersEncoded = UnmodifiableMultivaluedMap
-                    .getFromSeries(queryForm, false);
+                    .getFromSeries(queryForm, caseSensitive);
         }
 
         return this.queryParametersEncoded;
@@ -1298,7 +1292,6 @@ public class CallContext implements javax.ws.rs.core.Request, HttpHeaders,
     private WebApplicationException wrapUriSyntaxExc(URISyntaxException exc,
             Logger logger, String logMessage) throws WebApplicationException {
         logger.log(Level.WARNING, logMessage, exc);
-        exc.printStackTrace();
         throw new WebApplicationException(exc,
                 javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
     }

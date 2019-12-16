@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -48,11 +39,11 @@ import java.util.logging.Level;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Uniform;
+import org.restlet.data.Header;
 import org.restlet.data.Protocol;
 import org.restlet.data.Status;
 import org.restlet.engine.Edition;
 import org.restlet.engine.adapter.ClientCall;
-import org.restlet.engine.header.Header;
 import org.restlet.engine.header.HeaderConstants;
 import org.restlet.engine.util.SystemUtils;
 import org.restlet.representation.Representation;
@@ -329,14 +320,12 @@ public class HttpUrlConnectionCall extends ClientCall {
                     // Adjust the streaming mode
                     if (entity.getSize() != -1) {
                         // The size of the entity is known in advance
-                        getConnection().setFixedLengthStreamingMode(
-                                (int) entity.getSize());
+                        getConnection().setFixedLengthStreamingMode(entity.getSize());
                     } else {
                         // The size of the entity is not known in advance
                         if (getHelper().getChunkLength() >= 0) {
                             // Use chunked encoding
-                            getConnection().setChunkedStreamingMode(
-                                    getHelper().getChunkLength());
+                            getConnection().setChunkedStreamingMode(getHelper().getChunkLength());
                         } else {
                             // Use entity buffering to determine the content
                             // length
@@ -350,8 +339,14 @@ public class HttpUrlConnectionCall extends ClientCall {
 
             // Set the request headers
             for (Header header : getRequestHeaders()) {
-                getConnection().addRequestProperty(header.getName(),
-                        header.getValue());
+                if (header.getValue() != null) {
+                    getConnection().addRequestProperty(header.getName(),
+                            header.getValue());
+                } else {
+                    getHelper().getLogger().info(
+                            "The following header has a null value and has been discarded: "
+                                    + header.getName());
+                }
             }
 
             if ((Edition.CURRENT == Edition.GAE)

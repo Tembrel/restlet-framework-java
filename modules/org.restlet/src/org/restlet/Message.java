@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -42,12 +33,15 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.restlet.data.CacheDirective;
+import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.data.RecipientInfo;
 import org.restlet.data.Warning;
+import org.restlet.engine.header.HeaderConstants;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.ClientResource;
+import org.restlet.util.Series;
 
 /**
  * Generic message exchanged between components.
@@ -257,6 +251,28 @@ public abstract class Message {
         }
 
         return this.entityText;
+    }
+
+    /**
+     * Returns the series of lower-level HTTP headers. Please not that this
+     * method should rarely be used as most HTTP headers are already surfaced by
+     * the Restlet API. The result series can be used to deal with HTTP
+     * extension headers.
+     * 
+     * @return The HTTP headers.
+     */
+    @SuppressWarnings("unchecked")
+    public Series<Header> getHeaders() {
+        Series<Header> headers = (Series<Header>) getAttributes().get(
+                HeaderConstants.ATTRIBUTE_HEADERS);
+        if (headers == null) {
+            // [ifndef gwt] instruction
+            headers = new Series<Header>(Header.class);
+            // [ifdef gwt] instruction uncomment
+            // headers = new org.restlet.engine.util.HeaderSeries();
+            getAttributes().put(HeaderConstants.ATTRIBUTE_HEADERS, headers);
+        }
+        return headers;
     }
 
     /**

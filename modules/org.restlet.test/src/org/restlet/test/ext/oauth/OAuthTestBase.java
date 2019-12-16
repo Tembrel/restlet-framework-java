@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -74,6 +65,42 @@ public class OAuthTestBase {
 
         public String getTokenType() {
             return TOKEN_TYPE_BEARER;
+        }
+
+        public int getExpirePeriod() {
+            return 3600;
+        }
+
+        public String getRefreshToken() {
+            return STUB_REFRESH_TOKEN;
+        }
+
+        public String[] getScope() {
+            return new String[] { "a", "b" };
+        }
+
+        public String getUsername() {
+            return STUB_USERNAME;
+        }
+
+        public String getClientId() {
+            return STUB_CLIENT_ID;
+        }
+
+        public boolean isExpired() {
+            return false;
+        }
+    };
+    
+    public static Token SPRING_STUB_TOKEN = new ServerToken() {
+
+        public String getAccessToken() {
+            return STUB_ACCESS_TOKEN;
+        }
+
+        public String getTokenType() {
+        	//Spring returns bearer in lower case
+            return "bearer";
         }
 
         public int getExpirePeriod() {

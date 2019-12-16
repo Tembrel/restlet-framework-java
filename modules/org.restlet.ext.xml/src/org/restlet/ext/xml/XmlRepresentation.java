@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -238,6 +229,13 @@ public abstract class XmlRepresentation extends WriterRepresentation
     }
 
     /**
+     * Specifies that the parser will convert CDATA nodes to text nodes and
+     * append it to the adjacent (if any) text node. By default the value of
+     * this is set to false.
+     */
+    private volatile boolean coalescing;
+
+    /**
      * A SAX {@link EntityResolver} to use when resolving external entity
      * references while parsing this type of XML representations.
      * 
@@ -252,6 +250,24 @@ public abstract class XmlRepresentation extends WriterRepresentation
      * @see DocumentBuilder#setErrorHandler(ErrorHandler)
      */
     private volatile ErrorHandler errorHandler;
+
+    /**
+     * Specifies that the parser will expand entity reference nodes. By default
+     * the value of this is set to true.
+     */
+    private volatile boolean expandingEntityRefs;
+
+    /**
+     * Indicates if the parser will ignore comments. By default the value of
+     * this is set to false.
+     */
+    private volatile boolean ignoringComments;
+
+    /**
+     * Indicates if the parser will ignore extra white spaces in element
+     * content. By default the value of this is set to false.
+     */
+    private volatile boolean ignoringExtraWhitespaces;
 
     /** Indicates if processing is namespace aware. */
     private volatile boolean namespaceAware;
@@ -276,31 +292,6 @@ public abstract class XmlRepresentation extends WriterRepresentation
      * @see DocumentBuilderFactory#setValidating(boolean)
      */
     private volatile boolean validatingDtd;
-
-    /**
-     * Specifies that the parser will convert CDATA nodes to text nodes and
-     * append it to the adjacent (if any) text node. By default the value of
-     * this is set to false.
-     */
-    private volatile boolean coalescing;
-
-    /**
-     * Specifies that the parser will expand entity reference nodes. By default
-     * the value of this is set to true.
-     */
-    private volatile boolean expandingEntityRefs;
-
-    /**
-     * Indicates if the parser will ignore comments. By default the value of
-     * this is set to false.
-     */
-    private volatile boolean ignoringComments;
-
-    /**
-     * Indicates if the parser will ignore extra white spaces in element
-     * content. By default the value of this is set to false.
-     */
-    private volatile boolean ignoringExtraWhitespaces;
 
     /**
      * Indicates the desire for processing <em>XInclude</em> if found in this

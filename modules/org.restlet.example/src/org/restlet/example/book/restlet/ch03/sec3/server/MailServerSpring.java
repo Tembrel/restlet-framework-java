@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -34,9 +25,7 @@
 package org.restlet.example.book.restlet.ch03.sec3.server;
 
 import org.restlet.Component;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.xml.XmlBeanFactory;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * Creates a Restlet component and application based on a Spring XML
@@ -46,13 +35,13 @@ public class MailServerSpring {
 
     public static void main(String[] args) throws Exception {
         // Load the Spring container
-        ClassPathResource resource = new ClassPathResource(
+        ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(
                 "org/restlet/example/book/restlet/ch03/sec3/server/component-spring.xml");
-        BeanFactory factory = new XmlBeanFactory(resource);
 
         // Start the Restlet component
-        Component component = factory.getBean("component", Component.class);
+        Component component = ctx.getBean("component", Component.class);
         component.start();
+        ctx.close();
     }
 
 }

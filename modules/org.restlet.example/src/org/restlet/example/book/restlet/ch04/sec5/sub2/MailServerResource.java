@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -38,7 +29,6 @@ import java.io.IOException;
 import org.restlet.data.MediaType;
 import org.restlet.data.Reference;
 import org.restlet.ext.jackson.JacksonRepresentation;
-import org.restlet.ext.xstream.XstreamRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.Variant;
 import org.restlet.resource.ResourceException;
@@ -48,6 +38,7 @@ import org.restlet.resource.ServerResource;
  * Resource corresponding to a mail received or sent with the parent mail
  * account. Leverages Jackson extension.
  */
+@Deprecated
 public class MailServerResource extends ServerResource {
 
     @Override
@@ -69,14 +60,8 @@ public class MailServerResource extends ServerResource {
         mail.setAccountRef(new Reference(getReference(), "..").getTargetRef()
                 .toString());
 
-        if (MediaType.APPLICATION_XML.isCompatible(variant.getMediaType())) {
-            // Wraps the bean with an XStream representation
-            result = new XstreamRepresentation<Mail>(mail);
-        } else if (MediaType.APPLICATION_JSON.isCompatible(variant
-                .getMediaType())) {
-            // Wraps the bean with a Jackson representation
-            result = new JacksonRepresentation<Mail>(mail);
-        }
+        // Wraps the bean with a Jackson representation
+        result = new JacksonRepresentation<Mail>(mail);
 
         return result;
     }
@@ -87,19 +72,10 @@ public class MailServerResource extends ServerResource {
         Mail mail = null;
 
         try {
-            if (MediaType.APPLICATION_XML.isCompatible(representation
-                    .getMediaType())) {
-                // Parse the XML representation to get the mail bean
-                mail = new XstreamRepresentation<Mail>(representation,
-                        Mail.class).getObject();
-                System.out.println("XML representation received");
-            } else if (MediaType.APPLICATION_JSON.isCompatible(representation
-                    .getMediaType())) {
-                // Parse the JSON representation to get the mail bean
-                mail = new JacksonRepresentation<Mail>(representation,
-                        Mail.class).getObject();
-                System.out.println("JSON representation received");
-            }
+            // Parse the JSON representation to get the mail bean
+            mail = new JacksonRepresentation<Mail>(representation, Mail.class)
+                    .getObject();
+            System.out.println("JSON representation received");
 
             if (mail != null) {
                 // Output the mail bean

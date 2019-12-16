@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -34,13 +25,13 @@
 package org.restlet.ext.oauth;
 
 import org.restlet.Context;
-import org.restlet.ext.oauth.internal.Client;
-import org.restlet.ext.oauth.internal.ClientManager;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.ChallengeResponse;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Form;
+import org.restlet.ext.oauth.internal.Client;
+import org.restlet.ext.oauth.internal.ClientManager;
 import org.restlet.security.SecretVerifier;
 import org.restlet.security.User;
 import org.restlet.security.Verifier;
@@ -53,12 +44,27 @@ import org.restlet.security.Verifier;
  */
 public class ClientVerifier implements Verifier {
 
-    private Context context;
-
     private boolean acceptBodyMethod = false;
+
+    private Context context;
 
     public ClientVerifier(Context context) {
         this.context = context;
+    }
+
+    /**
+     * @return the acceptBodyMethod
+     */
+    public boolean isAcceptBodyMethod() {
+        return acceptBodyMethod;
+    }
+
+    /**
+     * @param acceptBodyMethod
+     *            the acceptBodyMethod to set
+     */
+    public void setAcceptBodyMethod(boolean acceptBodyMethod) {
+        this.acceptBodyMethod = acceptBodyMethod;
     }
 
     public int verify(Request request, Response response) {
@@ -115,20 +121,5 @@ public class ClientVerifier implements Verifier {
             return RESULT_INVALID;
         }
         return RESULT_VALID;
-    }
-
-    /**
-     * @return the acceptBodyMethod
-     */
-    public boolean isAcceptBodyMethod() {
-        return acceptBodyMethod;
-    }
-
-    /**
-     * @param acceptBodyMethod
-     *            the acceptBodyMethod to set
-     */
-    public void setAcceptBodyMethod(boolean acceptBodyMethod) {
-        this.acceptBodyMethod = acceptBodyMethod;
     }
 }

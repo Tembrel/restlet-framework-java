@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -72,6 +63,62 @@ import org.restlet.ext.jaxrs.internal.wrappers.params.ParameterList;
  * @author Stephan Koops
  */
 class PerRequestProviderWrapper extends AbstractProviderWrapper {
+
+    private final JaxRsProviders allProviders;
+
+    private final ExtensionBackwardMapping extensionBackwardMapping;
+
+    private final Class<?> jaxRsProviderClass;
+
+    private final Logger logger;
+
+    private final ObjectFactory objectFactory;
+
+    private final ThreadLocalizedContext tlContext;
+
+    /**
+     * Creates a new wrapper for a Provider and initializes the provider. If the
+     * given class is not a provider, an {@link IllegalArgumentException} is
+     * thrown.
+     * 
+     * @param jaxRsProviderClass
+     *            the JAX-RS provider class.
+     * @param objectFactory
+     *            The object factory is responsible for the provider
+     *            instantiation, if given.
+     * @param tlContext
+     * @param allProviders
+     * @param extensionBackwardMapping
+     * @param logger
+     * @throws IllegalArgumentException
+     * @throws InvocationTargetException
+     * @throws MissingConstructorException
+     * @throws InstantiateException
+     * @throws MissingAnnotationException
+     * @throws WebApplicationException
+     * @throws IllegalConstrParamTypeException
+     * @throws IllegalPathParamTypeException
+     */
+    public PerRequestProviderWrapper(final Class<?> jaxRsProviderClass,
+            final ObjectFactory objectFactory,
+            final ThreadLocalizedContext tlContext,
+            final JaxRsProviders allProviders,
+            final ExtensionBackwardMapping extensionBackwardMapping,
+            final Logger logger) throws IllegalArgumentException,
+            InvocationTargetException, MissingConstructorException,
+            InstantiateException, MissingAnnotationException,
+            WebApplicationException, IllegalConstrParamTypeException,
+            IllegalPathParamTypeException {
+        super(jaxRsProviderClass);
+        this.jaxRsProviderClass = jaxRsProviderClass;
+        this.objectFactory = objectFactory;
+        this.tlContext = tlContext;
+        this.allProviders = allProviders;
+        this.extensionBackwardMapping = extensionBackwardMapping;
+        this.logger = logger;
+        createInstance(); // test, if it works.
+        // If not, the provider class is not useable.
+    }
 
     /**
      * @param providerConstructor
@@ -166,62 +213,6 @@ class PerRequestProviderWrapper extends AbstractProviderWrapper {
         }
     }
 
-    private final Class<?> jaxRsProviderClass;
-
-    private final ObjectFactory objectFactory;
-
-    private final ThreadLocalizedContext tlContext;
-
-    private final JaxRsProviders allProviders;
-
-    private final ExtensionBackwardMapping extensionBackwardMapping;
-
-    private final Logger logger;
-
-    /**
-     * Creates a new wrapper for a Provider and initializes the provider. If the
-     * given class is not a provider, an {@link IllegalArgumentException} is
-     * thrown.
-     * 
-     * @param jaxRsProviderClass
-     *            the JAX-RS provider class.
-     * @param objectFactory
-     *            The object factory is responsible for the provider
-     *            instantiation, if given.
-     * @param tlContext
-     * @param allProviders
-     * @param extensionBackwardMapping
-     * @param logger
-     * @throws IllegalArgumentException
-     * @throws InvocationTargetException
-     * @throws MissingConstructorException
-     * @throws InstantiateException
-     * @throws MissingAnnotationException
-     * @throws WebApplicationException
-     * @throws IllegalConstrParamTypeException
-     * @throws IllegalPathParamTypeException
-     */
-    public PerRequestProviderWrapper(final Class<?> jaxRsProviderClass,
-            final ObjectFactory objectFactory,
-            final ThreadLocalizedContext tlContext,
-            final JaxRsProviders allProviders,
-            final ExtensionBackwardMapping extensionBackwardMapping,
-            final Logger logger) throws IllegalArgumentException,
-            InvocationTargetException, MissingConstructorException,
-            InstantiateException, MissingAnnotationException,
-            WebApplicationException, IllegalConstrParamTypeException,
-            IllegalPathParamTypeException {
-        super(jaxRsProviderClass);
-        this.jaxRsProviderClass = jaxRsProviderClass;
-        this.objectFactory = objectFactory;
-        this.tlContext = tlContext;
-        this.allProviders = allProviders;
-        this.extensionBackwardMapping = extensionBackwardMapping;
-        this.logger = logger;
-        createInstance(); // test, if it works.
-        // If not, the provider class is not useable.
-    }
-
     @Override
     public final boolean equals(Object otherProvider) {
         if (this == otherProvider) {
@@ -256,6 +247,53 @@ class PerRequestProviderWrapper extends AbstractProviderWrapper {
     public ContextResolver getInitializedCtxResolver()
             throws ProviderNotInitializableException {
         return new SingletonProvider(instantiateAndInitialize(), logger);
+    }
+
+    /**
+     * @see org.restlet.ext.jaxrs.internal.wrappers.provider.ProviderWrapper#getInitializedExcMapper()
+     */
+    @SuppressWarnings("unchecked")
+    public ExceptionMapper<? extends Throwable> getInitializedExcMapper()
+            throws ProviderNotInitializableException {
+        return (ExceptionMapper<? extends Throwable>) instantiateAndInitialize();
+    }
+
+    /**
+     * @see org.restlet.ext.jaxrs.internal.wrappers.provider.ProviderWrapper#getInitializedReader()
+     */
+    public org.restlet.ext.jaxrs.internal.wrappers.provider.MessageBodyReader getInitializedReader()
+            throws ProviderNotInitializableException {
+        return new SingletonProvider(instantiateAndInitialize(), logger);
+    }
+
+    /**
+     * @see org.restlet.ext.jaxrs.internal.wrappers.provider.ProviderWrapper#getInitializedWriter()
+     */
+    public org.restlet.ext.jaxrs.internal.wrappers.provider.MessageBodyWriter getInitializedWriter()
+            throws ProviderNotInitializableException {
+        return new SingletonProvider(instantiateAndInitialize(), logger);
+    }
+
+    /**
+     * @see org.restlet.ext.jaxrs.internal.wrappers.provider.ProviderWrapper#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return SystemUtils.hashCode(this.jaxRsProviderClass);
+    }
+
+    /**
+     * This method does nothing in this class.
+     * 
+     * @see ProviderWrapper#initAtAppStartUp(ThreadLocalizedContext, Providers,
+     *      ExtensionBackwardMapping)
+     */
+    public void initAtAppStartUp(ThreadLocalizedContext tlContext,
+            Providers allProviders,
+            ExtensionBackwardMapping extensionBackwardMapping)
+            throws InjectException, InvocationTargetException,
+            IllegalTypeException {
+        // nothing to do here
     }
 
     /**
@@ -328,53 +366,6 @@ class PerRequestProviderWrapper extends AbstractProviderWrapper {
             throw new ProviderNotInitializableException();
         }
         return jaxRsProvider;
-    }
-
-    /**
-     * @see org.restlet.ext.jaxrs.internal.wrappers.provider.ProviderWrapper#getInitializedExcMapper()
-     */
-    @SuppressWarnings("unchecked")
-    public ExceptionMapper<? extends Throwable> getInitializedExcMapper()
-            throws ProviderNotInitializableException {
-        return (ExceptionMapper<? extends Throwable>) instantiateAndInitialize();
-    }
-
-    /**
-     * @see org.restlet.ext.jaxrs.internal.wrappers.provider.ProviderWrapper#getInitializedReader()
-     */
-    public org.restlet.ext.jaxrs.internal.wrappers.provider.MessageBodyReader getInitializedReader()
-            throws ProviderNotInitializableException {
-        return new SingletonProvider(instantiateAndInitialize(), logger);
-    }
-
-    /**
-     * @see org.restlet.ext.jaxrs.internal.wrappers.provider.ProviderWrapper#getInitializedWriter()
-     */
-    public org.restlet.ext.jaxrs.internal.wrappers.provider.MessageBodyWriter getInitializedWriter()
-            throws ProviderNotInitializableException {
-        return new SingletonProvider(instantiateAndInitialize(), logger);
-    }
-
-    /**
-     * @see org.restlet.ext.jaxrs.internal.wrappers.provider.ProviderWrapper#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        return SystemUtils.hashCode(this.jaxRsProviderClass);
-    }
-
-    /**
-     * This method does nothing in this class.
-     * 
-     * @see ProviderWrapper#initAtAppStartUp(ThreadLocalizedContext, Providers,
-     *      ExtensionBackwardMapping)
-     */
-    public void initAtAppStartUp(ThreadLocalizedContext tlContext,
-            Providers allProviders,
-            ExtensionBackwardMapping extensionBackwardMapping)
-            throws InjectException, InvocationTargetException,
-            IllegalTypeException {
-        // nothing to do here
     }
 
     /**

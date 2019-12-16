@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -41,10 +32,11 @@ import org.restlet.routing.Router;
 import org.restlet.routing.TemplateRoute;
 
 /**
- * This class provides an implementation of {@link RouterProvider}. You
- * register this class as an OSGi declarative service. The service 
- * declaration should look like:
+ * This class provides an implementation of {@link RouterProvider}. You register
+ * this class as an OSGi declarative service. The service declaration should
+ * look like:
  * <p>
+ * 
  * <pre>
  * {@code
  * <?xml version="1.0" encoding="UTF-8"?>
@@ -56,25 +48,30 @@ import org.restlet.routing.TemplateRoute;
  * </scr:component>
  * }
  * </pre>
- * </p><p>
+ * 
+ * </p>
+ * <p>
  * The referenced services are:
  * <ul>
- *   <li>FilterProvider - optional - policy="static" cardinality="1..1"</li>
- *   <li>DefaultResourceProvider - optional - policy="dynamic" cardinality="0..1"</li>
- *   <li>DefaultRouterProvider - optional - policy="dynamic" cardinality="0..1"</li>
- *   <li>DirectoryProvider - optional - policy="dynamic" cardinality="0..n"</li>
- *   <li>ResourceProvider - optional - policy="dynamic" cardinality="0..n"</li>
- * </ul>
- * </p><p>
- * The provided services are:
- * <ul>
- *   <li>FilterProvider</li>
+ * <li>FilterProvider - optional - policy="static" cardinality="1..1"</li>
+ * <li>DefaultResourceProvider - optional - policy="dynamic" cardinality="0..1"</li>
+ * <li>DefaultRouterProvider - optional - policy="dynamic" cardinality="0..1"</li>
+ * <li>DirectoryProvider - optional - policy="dynamic" cardinality="0..n"</li>
+ * <li>ResourceProvider - optional - policy="dynamic" cardinality="0..n"</li>
  * </ul>
  * </p>
+ * <p>
+ * The provided services are:
+ * <ul>
+ * <li>FilterProvider</li>
+ * </ul>
+ * </p>
+ * 
  * @author Bryan Hunt
  * 
  */
-public class BaseRouterProvider extends BaseRestletProvider implements RouterProvider {
+public class BaseRouterProvider extends BaseRestletProvider implements
+        RouterProvider {
     private RestletProvider defaultRestletProvider;
 
     private HashSet<DirectoryProvider> directoryProviders = new HashSet<DirectoryProvider>();
@@ -90,15 +87,17 @@ public class BaseRouterProvider extends BaseRestletProvider implements RouterPro
 
     private void attachResource(ResourceProvider resourceProvider) {
         for (String path : resourceProvider.getPaths()) {
-        	TemplateRoute templateRoute = router.attach(path, resourceProvider.getInboundRoot(router.getContext()));
-        	templateRoute.setMatchingMode(resourceProvider.getMatchingMode());
+            TemplateRoute templateRoute = router.attach(path,
+                    resourceProvider.getInboundRoot(router.getContext()));
+            templateRoute.setMatchingMode(resourceProvider.getMatchingMode());
         }
     }
 
     /**
      * Called by OSGi DS to inject the default resource provider service
      * 
-     * @param resourceProvider the default resource provider
+     * @param resourceProvider
+     *            the default resource provider
      */
     public void bindDefaultResourceProvider(ResourceProvider resourceProvider) {
         defaultRestletProvider = resourceProvider;
@@ -111,7 +110,8 @@ public class BaseRouterProvider extends BaseRestletProvider implements RouterPro
     /**
      * Called by OSGi DS to inject the default router provider service
      * 
-     * @param routerProvider the default router provider
+     * @param routerProvider
+     *            the default router provider
      */
     public void bindDefaultRouterProvider(RouterProvider routerProvider) {
         defaultRestletProvider = routerProvider;
@@ -124,7 +124,8 @@ public class BaseRouterProvider extends BaseRestletProvider implements RouterPro
     /**
      * Called by OSGi DS to inject the directory provider service
      * 
-     * @param directoryProvider the directory provider
+     * @param directoryProvider
+     *            the directory provider
      */
     public void bindDirectoryProvider(DirectoryProvider directoryProvider) {
         directoryProviders.add(directoryProvider);
@@ -136,7 +137,8 @@ public class BaseRouterProvider extends BaseRestletProvider implements RouterPro
     /**
      * Called by OSGi DS to inject the resource provider service
      * 
-     * @param resourceProvider the resource provider
+     * @param resourceProvider
+     *            the resource provider
      */
     public void bindResourceProvider(ResourceProvider resourceProvider) {
         resourceProviders.add(resourceProvider);
@@ -147,7 +149,8 @@ public class BaseRouterProvider extends BaseRestletProvider implements RouterPro
 
     /**
      * 
-     * @param the restlet application context
+     * @param the
+     *            restlet application context
      * @return the newly created router instance
      */
     protected Router createRouter(Context context) {
@@ -182,7 +185,8 @@ public class BaseRouterProvider extends BaseRestletProvider implements RouterPro
     /**
      * Called by OSGi DS to un-inject the default resource provider service
      * 
-     * @param resourceProvider the default resource provider
+     * @param resourceProvider
+     *            the default resource provider
      */
     public void unbindDefaultResourceProvider(ResourceProvider resourceProvider) {
         if (defaultRestletProvider == resourceProvider) {
@@ -197,7 +201,8 @@ public class BaseRouterProvider extends BaseRestletProvider implements RouterPro
     /**
      * Called by OSGi DS to un-inject the default router provider service
      * 
-     * @param routerProvider the default router provider
+     * @param routerProvider
+     *            the default router provider
      */
     public void unbindDefaultRouterProvider(RouterProvider routerProvider) {
         if (defaultRestletProvider == routerProvider) {
@@ -211,7 +216,8 @@ public class BaseRouterProvider extends BaseRestletProvider implements RouterPro
     /**
      * Called by OSGi DS to un-inject the directory provider service
      * 
-     * @param directoryProvider the directory provider
+     * @param directoryProvider
+     *            the directory provider
      */
     public void unbindDirectoryProvider(DirectoryProvider directoryProvider) {
         if (directoryProviders.remove(directoryProvider)) {
@@ -224,7 +230,8 @@ public class BaseRouterProvider extends BaseRestletProvider implements RouterPro
     /**
      * Called by OSGi DS to un-inject the resource provider service
      * 
-     * @param resourceProvider the resource provider
+     * @param resourceProvider
+     *            the resource provider
      */
     public void unbindResourceProvider(ResourceProvider resourceProvider) {
         if (resourceProviders.remove(resourceProvider)) {

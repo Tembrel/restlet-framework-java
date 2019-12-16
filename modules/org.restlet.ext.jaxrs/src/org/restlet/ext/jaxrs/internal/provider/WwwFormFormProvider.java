@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -68,12 +59,38 @@ import org.restlet.representation.Representation;
 public class WwwFormFormProvider extends AbstractProvider<Form> {
 
     /**
+     * @param mediaType
+     * @param entityStream
+     * @return
+     */
+    static Form getForm(MediaType mediaType, InputStream entityStream) {
+        org.restlet.data.MediaType restletMediaType = Converter
+                .toRestletMediaType(mediaType);
+        Form form = new Form(new InputRepresentation(entityStream,
+                restletMediaType));
+        Request.getCurrent().setEntity(form.getWebRepresentation());
+        return form;
+    }
+
+    /**
      * @see AbstractProvider#getSize(java.lang.Object)
      */
     @Override
     public long getSize(Form form, Class<?> type, Type genericType,
             Annotation[] annotations, MediaType mediaType) {
         return -1;
+    }
+
+    /**
+     * @see AbstractProvider#readFrom(Class, Type, Annotation[], MediaType,
+     *      MultivaluedMap, InputStream)
+     */
+    @Override
+    public Form readFrom(Class<Form> type, Type genericType,
+            Annotation[] annotations, MediaType mediaType,
+            MultivaluedMap<String, String> httpResponseHeaders,
+            InputStream entityStream) throws IOException {
+        return getForm(mediaType, entityStream);
     }
 
     /**
@@ -95,31 +112,5 @@ public class WwwFormFormProvider extends AbstractProvider<Form> {
             OutputStream entityStream) throws IOException {
         Representation formRepr = form.getWebRepresentation();
         IoUtils.copy(formRepr.getStream(), entityStream);
-    }
-
-    /**
-     * @see AbstractProvider#readFrom(Class, Type, Annotation[], MediaType,
-     *      MultivaluedMap, InputStream)
-     */
-    @Override
-    public Form readFrom(Class<Form> type, Type genericType,
-            Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, String> httpResponseHeaders,
-            InputStream entityStream) throws IOException {
-        return getForm(mediaType, entityStream);
-    }
-
-    /**
-     * @param mediaType
-     * @param entityStream
-     * @return
-     */
-    static Form getForm(MediaType mediaType, InputStream entityStream) {
-        org.restlet.data.MediaType restletMediaType = Converter
-                .toRestletMediaType(mediaType);
-        Form form = new Form(new InputRepresentation(entityStream,
-                restletMediaType));
-        Request.getCurrent().setEntity(form.getWebRepresentation());
-        return form;
     }
 }

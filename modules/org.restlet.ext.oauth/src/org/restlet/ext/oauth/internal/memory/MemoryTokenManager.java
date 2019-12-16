@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -37,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.restlet.ext.oauth.OAuthError;
 import org.restlet.ext.oauth.OAuthException;
 import org.restlet.ext.oauth.OAuthResourceDefs;
@@ -52,9 +44,51 @@ import org.restlet.ext.oauth.internal.Token;
  */
 public class MemoryTokenManager extends AbstractTokenManager {
 
+    private final Map<String, AuthSession> sessions = new ConcurrentHashMap<String, AuthSession>();
+
     private final Map<String, MemoryToken> tokens = new ConcurrentHashMap<String, MemoryToken>();
 
-    private final Map<String, AuthSession> sessions = new ConcurrentHashMap<String, AuthSession>();
+    public Token findToken(Client client, String username) {
+        for (MemoryToken token : tokens.values()) {
+            if (token.getClientId().equals(client.getClientId())
+                    && ((username == null && token.getUsername() == null) || (username != null && username
+                            .equals(token.getUsername())))) {
+                return token;
+            }
+        }
+        return null;
+    }
+
+    protected MemoryToken findTokenByRefreshToken(String refreshToken) {
+        for (MemoryToken token : tokens.values()) {
+            if (token.getRefreshToken().equals(refreshToken)) {
+                return token;
+            }
+        }
+        return null;
+    }
+
+    public Token[] findTokens(Client client) {
+        ArrayList<Token> list = new ArrayList<Token>();
+        for (MemoryToken token : tokens.values()) {
+            if (/* !token.isExpired() && */
+            token.getClientId().equals(client.getClientId())) {
+                list.add(token);
+            }
+        }
+        return list.toArray(new Token[list.size()]);
+    }
+
+    public Token[] findTokens(String username) {
+        ArrayList<Token> list = new ArrayList<Token>();
+        for (MemoryToken token : tokens.values()) {
+            if (/* !token.isExpired() && */
+            token.getUsername() != null && token.getUsername().equals(username)) {
+                list.add(token);
+            }
+        }
+        return list.toArray(new Token[list.size()]);
+    }
 
     public Token generateToken(Client client, String username, String[] scope)
             throws OAuthException {
@@ -128,12 +162,6 @@ public class MemoryTokenManager extends AbstractTokenManager {
         return null; // FIXME
     }
 
-    public String storeSession(AuthSession session) throws OAuthException {
-        String code = generateRawCode();
-        sessions.put(code, session);
-        return code;
-    }
-
     public AuthSession restoreSession(String code) throws OAuthException {
         AuthSession session = sessions.remove(code);
         if (session == null) {
@@ -141,6 +169,31 @@ public class MemoryTokenManager extends AbstractTokenManager {
                     null);
         }
         return session;
+    }
+
+    public void revokeAllTokens(Client client) {
+        for (Token token : findTokens(client)) {
+            tokens.remove(token.getAccessToken());
+        }
+    }
+
+    public void revokeAllTokens(String username) {
+        for (Token token : findTokens(username)) {
+            tokens.remove(token.getAccessToken());
+        }
+    }
+
+    public void revokeToken(Client client, String username) {
+        Token token = findToken(client, username);
+        if (token != null) {
+            tokens.remove(token.getAccessToken());
+        }
+    }
+
+    public String storeSession(AuthSession session) throws OAuthException {
+        String code = generateRawCode();
+        sessions.put(code, session);
+        return code;
     }
 
     public Token validateToken(String accessToken) throws OAuthException {
@@ -154,66 +207,5 @@ public class MemoryTokenManager extends AbstractTokenManager {
                     "The access token expired.", null);
         }
         return token;
-    }
-
-    public Token findToken(Client client, String username) {
-        for (MemoryToken token : tokens.values()) {
-            if (token.getClientId().equals(client.getClientId())
-                    && ((username == null && token.getUsername() == null) || (username != null && username
-                            .equals(token.getUsername())))) {
-                return token;
-            }
-        }
-        return null;
-    }
-
-    protected MemoryToken findTokenByRefreshToken(String refreshToken) {
-        for (MemoryToken token : tokens.values()) {
-            if (token.getRefreshToken().equals(refreshToken)) {
-                return token;
-            }
-        }
-        return null;
-    }
-
-    public Token[] findTokens(String username) {
-        ArrayList<Token> list = new ArrayList<Token>();
-        for (MemoryToken token : tokens.values()) {
-            if (/* !token.isExpired() && */
-            token.getUsername() != null && token.getUsername().equals(username)) {
-                list.add(token);
-            }
-        }
-        return list.toArray(new Token[list.size()]);
-    }
-
-    public Token[] findTokens(Client client) {
-        ArrayList<Token> list = new ArrayList<Token>();
-        for (MemoryToken token : tokens.values()) {
-            if (/* !token.isExpired() && */
-            token.getClientId().equals(client.getClientId())) {
-                list.add(token);
-            }
-        }
-        return list.toArray(new Token[list.size()]);
-    }
-
-    public void revokeToken(Client client, String username) {
-        Token token = findToken(client, username);
-        if (token != null) {
-            tokens.remove(token.getAccessToken());
-        }
-    }
-
-    public void revokeAllTokens(String username) {
-        for (Token token : findTokens(username)) {
-            tokens.remove(token.getAccessToken());
-        }
-    }
-
-    public void revokeAllTokens(Client client) {
-        for (Token token : findTokens(client)) {
-            tokens.remove(token.getAccessToken());
-        }
     }
 }

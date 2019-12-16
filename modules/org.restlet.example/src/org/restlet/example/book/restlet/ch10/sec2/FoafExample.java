@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -55,14 +46,14 @@ public class FoafExample {
 
         // Linked Simpson resources
         Reference homerRef = new Reference(
-        "http://www.rmep.org/accounts/chunkylover53/");
+                "http://www.rmep.org/accounts/chunkylover53/");
         Reference margeRef = new Reference(
-        "http://www.rmep.org/accounts/bretzels34/");
+                "http://www.rmep.org/accounts/bretzels34/");
         Reference bartRef = new Reference(
-        "http://www.rmep.org/accounts/jojo10/");
+                "http://www.rmep.org/accounts/jojo10/");
         Reference lisaRef = new Reference(
-        "http://www.rmep.org/accounts/lisa1984/");
-        
+                "http://www.rmep.org/accounts/lisa1984/");
+
         // Example RDF graph
         Graph example = new Graph();
         example.add(homerRef, firstName, new Literal("Homer"));

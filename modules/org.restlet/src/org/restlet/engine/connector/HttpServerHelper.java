@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -33,15 +24,15 @@
 
 package org.restlet.engine.connector;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-
-import org.restlet.Server;
-import org.restlet.data.Protocol;
-
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.restlet.Server;
+import org.restlet.data.Protocol;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 /**
  * Internal HTTP server connector.
@@ -65,8 +56,22 @@ public class HttpServerHelper extends NetServerHelper {
 
     @Override
     public void start() throws Exception {
-        this.server = HttpServer.create(new InetSocketAddress(getHelped()
-                .getPort()), 0);
+        String addr = getHelped().getAddress();
+        // Use ephemeral port
+        int port = getHelped().getPort() > 0 ? getHelped().getPort() : 0;
+
+        if (addr != null) {
+            // This call may throw UnknownHostException and otherwise always
+            // returns an instance of INetAddress.
+            // Note: textual representation of inet addresses are supported
+            InetAddress iaddr = InetAddress.getByName(addr);
+            setAddress(new InetSocketAddress(iaddr, port));
+        } else {
+            setAddress(new InetSocketAddress(port));
+        }
+
+        // Complete initialization
+        server = HttpServer.create(getAddress(), 0);
         server.createContext("/", new HttpHandler() {
             @Override
             public void handle(HttpExchange httpExchange) throws IOException {
@@ -74,14 +79,15 @@ public class HttpServerHelper extends NetServerHelper {
                         httpExchange));
             }
         });
-        server.setExecutor(null); // creates a default executor
+        // creates a default executor
+        server.setExecutor(createThreadPool());
         server.start();
 
         setConfidential(false);
         setEphemeralPort(server.getAddress().getPort());
         super.start();
     }
-    
+
     @Override
     public synchronized void stop() throws Exception {
         super.stop();

@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -36,6 +27,7 @@ package org.restlet.ext.oauth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
+
 import org.json.JSONException;
 import org.restlet.Context;
 import org.restlet.Response;
@@ -43,9 +35,9 @@ import org.restlet.data.CacheDirective;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.ext.json.JsonRepresentation;
-import org.restlet.ext.oauth.internal.Scopes;
 import org.restlet.ext.oauth.internal.Client;
 import org.restlet.ext.oauth.internal.ClientManager;
+import org.restlet.ext.oauth.internal.Scopes;
 import org.restlet.ext.oauth.internal.TokenManager;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
@@ -63,6 +55,36 @@ public abstract class OAuthServerResource extends ServerResource implements
         OAuthResourceDefs {
 
     public static final String PARAMETER_DEFAULT_SCOPE = "defaultScope";
+
+    public static void addCacheDirective(Response response,
+            CacheDirective cacheDirective) {
+        List<CacheDirective> cacheDirectives = response.getCacheDirectives();
+        if (cacheDirectives == null) {
+            cacheDirectives = new ArrayList<CacheDirective>();
+            response.setCacheDirectives(cacheDirectives);
+        }
+        cacheDirectives.add(cacheDirective);
+    }
+
+    /**
+     * Returns the representation of the given error. The format of the JSON
+     * document is according to 5.2. Error Response.
+     * 
+     * @param ex
+     *            Any OAuthException with error
+     * @return The representation of the given error.
+     */
+    public static Representation responseErrorRepresentation(OAuthException ex) {
+        try {
+            return new JsonRepresentation(ex.createErrorDocument());
+        } catch (JSONException e) {
+            StringRepresentation r = new StringRepresentation(
+                    "{\"error\":\"server_error\",\"error_description:\":\""
+                            + e.getLocalizedMessage() + "\"}");
+            r.setMediaType(MediaType.APPLICATION_JSON);
+            return r;
+        }
+    }
 
     protected volatile ClientManager clients;
 
@@ -148,35 +170,5 @@ public abstract class OAuthServerResource extends ServerResource implements
      */
     protected String getState(Form params) {
         return params.getFirstValue(STATE);
-    }
-
-    /**
-     * Returns the representation of the given error. The format of the JSON
-     * document is according to 5.2. Error Response.
-     * 
-     * @param ex
-     *            Any OAuthException with error
-     * @return The representation of the given error.
-     */
-    public static Representation responseErrorRepresentation(OAuthException ex) {
-        try {
-            return new JsonRepresentation(ex.createErrorDocument());
-        } catch (JSONException e) {
-            StringRepresentation r = new StringRepresentation(
-                    "{\"error\":\"server_error\",\"error_description:\":\""
-                            + e.getLocalizedMessage() + "\"}");
-            r.setMediaType(MediaType.APPLICATION_JSON);
-            return r;
-        }
-    }
-
-    public static void addCacheDirective(Response response,
-            CacheDirective cacheDirective) {
-        List<CacheDirective> cacheDirectives = response.getCacheDirectives();
-        if (cacheDirectives == null) {
-            cacheDirectives = new ArrayList<CacheDirective>();
-            response.setCacheDirectives(cacheDirectives);
-        }
-        cacheDirectives.add(cacheDirective);
     }
 }

@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -394,7 +385,7 @@ public class ClientResource extends Resource {
      *            The handled request.
      */
     public ClientResource(Request request) {
-        this(request, null);
+        this(request, new Response(request));
     }
 
     /**
@@ -954,7 +945,7 @@ public class ClientResource extends Resource {
      */
     @Override
     public Representation handle() {
-        Response response = handleOutbound(new Request(getRequest()));
+        Response response = handleOutbound(createRequest());
         return (response == null) ? null : response.getEntity();
     }
 
@@ -1064,9 +1055,6 @@ public class ClientResource extends Resource {
      * @return The optional response entity.
      */
     protected Representation handle(Method method, Representation entity) {
-        Request request = createRequest();
-        request.setMethod(method);
-        request.setEntity(entity);
         return handle(method, entity, getClientInfo());
     }
 
@@ -1402,7 +1390,7 @@ public class ClientResource extends Resource {
      */
     public Representation patch(Object entity) throws ResourceException {
         try {
-            return patch(toRepresentation(entity, null));
+            return patch(toRepresentation(entity));
         } catch (IOException e) {
             throw new ResourceException(e);
         }
@@ -1443,8 +1431,7 @@ public class ClientResource extends Resource {
     public Representation patch(Object entity, MediaType mediaType)
             throws ResourceException {
         try {
-            return handle(Method.PATCH, toRepresentation(entity, null),
-                    mediaType);
+            return handle(Method.PATCH, toRepresentation(entity), mediaType);
         } catch (IOException e) {
             throw new ResourceException(e);
         }
@@ -1478,7 +1465,7 @@ public class ClientResource extends Resource {
      */
     public Representation post(Object entity) throws ResourceException {
         try {
-            return post(toRepresentation(entity, null));
+            return post(toRepresentation(entity));
         } catch (IOException e) {
             throw new ResourceException(e);
         }
@@ -1521,8 +1508,7 @@ public class ClientResource extends Resource {
     public Representation post(Object entity, MediaType mediaType)
             throws ResourceException {
         try {
-            return handle(Method.POST, toRepresentation(entity, null),
-                    mediaType);
+            return handle(Method.POST, toRepresentation(entity), mediaType);
         } catch (IOException e) {
             throw new ResourceException(e);
         }
@@ -1558,7 +1544,7 @@ public class ClientResource extends Resource {
      */
     public Representation put(Object entity) throws ResourceException {
         try {
-            return put(toRepresentation(entity, null));
+            return put(toRepresentation(entity));
         } catch (IOException e) {
             throw new ResourceException(e);
         }
@@ -1601,7 +1587,7 @@ public class ClientResource extends Resource {
     public Representation put(Object entity, MediaType mediaType)
             throws ResourceException {
         try {
-            return handle(Method.PUT, toRepresentation(entity, null), mediaType);
+            return handle(Method.PUT, toRepresentation(entity), mediaType);
         } catch (IOException e) {
             throw new ResourceException(e);
         }
@@ -2094,15 +2080,34 @@ public class ClientResource extends Resource {
     // [ifndef gwt] method
     /**
      * Wraps the client resource to proxy calls to the given Java interface into
-     * Restlet method calls.
+     * Restlet method calls. Use the {@link org.restlet.engine.Engine}
+     * classloader in order to generate the proxy.
      * 
      * @param <T>
      * @param resourceInterface
      *            The annotated resource interface class to proxy.
      * @return The proxy instance.
      */
-    @SuppressWarnings("unchecked")
     public <T> T wrap(Class<? extends T> resourceInterface) {
+        return wrap(resourceInterface, org.restlet.engine.Engine.getInstance()
+                .getClassLoader());
+    }
+
+    // [ifndef gwt] method
+    /**
+     * Wraps the client resource to proxy calls to the given Java interface into
+     * Restlet method calls.
+     * 
+     * @param <T>
+     * @param resourceInterface
+     *            The annotated resource interface class to proxy.
+     * @param classLoader
+     *            The classloader used to instantiate the dynamic proxy.
+     * @return The proxy instance.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T wrap(Class<? extends T> resourceInterface,
+            ClassLoader classLoader) {
         T result = null;
 
         // Create the client resource proxy
@@ -2110,8 +2115,7 @@ public class ClientResource extends Resource {
                 this, resourceInterface);
 
         // Instantiate our dynamic proxy
-        result = (T) java.lang.reflect.Proxy.newProxyInstance(
-                org.restlet.engine.Engine.getInstance().getClassLoader(),
+        result = (T) java.lang.reflect.Proxy.newProxyInstance(classLoader,
                 new Class<?>[] { ClientProxy.class, resourceInterface }, h);
 
         return result;

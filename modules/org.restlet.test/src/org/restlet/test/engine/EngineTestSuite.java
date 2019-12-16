@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -36,10 +27,8 @@ package org.restlet.test.engine;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.restlet.test.engine.connector.AsynchroneTestCase;
-import org.restlet.test.engine.connector.HttpInboundRequestTestCase;
+import org.restlet.test.engine.connector.ConnectorsTestSuite;
 import org.restlet.test.engine.io.BioUtilsTestCase;
-import org.restlet.test.engine.io.BufferTestCase;
 import org.restlet.test.engine.io.ReaderInputStreamTestCase;
 import org.restlet.test.engine.util.Base64TestCase;
 
@@ -65,14 +54,11 @@ public class EngineTestSuite extends TestSuite {
         addTestSuite(AlphaNumericComparatorTestCase.class);
         addTestSuite(AnnotationUtilsTestCase.class);
         addTestSuite(Base64TestCase.class);
-        addTestSuite(BufferTestCase.class);
         addTestSuite(BioUtilsTestCase.class);
         addTestSuite(CookiesTestCase.class);
         addTestSuite(ContentTypeTestCase.class);
         addTestSuite(HeaderTestCase.class);
         addTestSuite(HttpCallTestCase.class);
-        addTestSuite(AsynchroneTestCase.class);
-        addTestSuite(HttpInboundRequestTestCase.class);
         addTestSuite(ImmutableDateTestCase.class);
         addTestSuite(UnclosableInputStreamTestCase.class);
         addTestSuite(UnclosableOutputStreamTestCase.class);

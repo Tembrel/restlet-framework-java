@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -52,11 +43,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.restlet.Response;
 import org.restlet.Server;
 import org.restlet.data.Form;
+import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.data.Protocol;
 import org.restlet.data.Status;
 import org.restlet.engine.adapter.ServerCall;
-import org.restlet.engine.header.Header;
 import org.restlet.engine.header.HeaderConstants;
 import org.restlet.engine.header.LanguageReader;
 import org.restlet.engine.io.UnclosableInputStream;
@@ -97,11 +88,6 @@ public class ServletCall extends ServerCall {
         this.response = response;
     }
 
-    @Override
-    public void flushBuffers() throws IOException {
-        getResponse().flushBuffer();
-    }
-
     /**
      * Constructor.
      * 
@@ -127,6 +113,11 @@ public class ServletCall extends ServerCall {
     @Override
     public boolean abort() {
         return false;
+    }
+
+    @Override
+    public void flushBuffers() throws IOException {
+        getResponse().flushBuffer();
     }
 
     @Override

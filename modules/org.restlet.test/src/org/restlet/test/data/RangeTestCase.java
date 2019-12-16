@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -40,7 +31,6 @@ import java.util.List;
 import org.restlet.Application;
 import org.restlet.Client;
 import org.restlet.Component;
-import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -321,39 +311,37 @@ public class RangeTestCase extends RestletTestCase {
             Request request;
             Response response;
 
+            String uriEssai = "http://localhost:" + TEST_PORT + "/testPut/essai.txt";
+            String uriEssai2 = "http://localhost:" + TEST_PORT + "/testPut/essai2.txt";
+            String uriEssai3 = "http://localhost:" + TEST_PORT + "/testPut/essai3.txt";
+            
             IoUtils.delete(testDir, true);
-            Client client = new Client(new Context(), Protocol.HTTP);
-            client.getContext().getParameters().add("tracing", "true");
+            Client client = new Client(Protocol.HTTP);
+
+            response = client.handle(new Request(Method.GET, uriEssai));
 
             // PUT on a file that does not exist
-            request = new Request(Method.PUT, "http://localhost:" + TEST_PORT
-                    + "/testPut/essai.txt");
+            request = new Request(Method.PUT, uriEssai);
             request.setEntity(new StringRepresentation("1234567890"));
             request.setRanges(Arrays.asList(new Range(0, 10)));
             response = client.handle(request);
             assertTrue(response.getStatus().isSuccess());
-            response = client.handle(new Request(Method.GET, request
-                    .getResourceRef()));
+            response = client.handle(new Request(Method.GET, request.getResourceRef()));
             assertEquals(Status.SUCCESS_OK, response.getStatus());
             assertEquals("1234567890", response.getEntity().getText());
 
-            // Partial PUT on a file, the provided representation overflowed the
-            // existing file
-            request = new Request(Method.PUT, "http://localhost:" + TEST_PORT
-                    + "/testPut/essai.txt");
+            // Partial PUT on a file, the provided representation overflowed the existing file
+            request = new Request(Method.PUT, uriEssai);
             request.setEntity(new StringRepresentation("0000000000"));
             request.setRanges(Arrays.asList(new Range(1, 10)));
             response = client.handle(request);
             assertTrue(response.getStatus().isSuccess());
-            response = client.handle(new Request(Method.GET, request
-                    .getResourceRef()));
+            response = client.handle(new Request(Method.GET, request.getResourceRef()));
             assertEquals(Status.SUCCESS_OK, response.getStatus());
             assertEquals("10000000000", response.getEntity().getText());
 
-            // Partial PUT on a file that does not exists, the provided range
-            // does not start at the 0 index.
-            request = new Request(Method.PUT, "http://localhost:" + TEST_PORT
-                    + "/testPut/essai2.txt");
+            // Partial PUT on a file that does not exists, the provided range does not start at the 0 index.
+            request = new Request(Method.PUT, uriEssai2);
             request.setEntity(new StringRepresentation("0000000000"));
             request.setRanges(Arrays.asList(new Range(1, 10)));
             response = client.handle(request);
@@ -364,34 +352,27 @@ public class RangeTestCase extends RestletTestCase {
             assertEquals("0000000000", response.getEntity().getText());
 
             // Partial PUT on a file, simple range
-            request = new Request(Method.PUT, "http://localhost:" + TEST_PORT
-                    + "/testPut/essai.txt");
+            request = new Request(Method.PUT, uriEssai);
             request.setEntity(new StringRepresentation("22"));
             request.setRanges(Arrays.asList(new Range(2, 2)));
             response = client.handle(request);
             assertTrue(response.getStatus().isSuccess());
-            response = client.handle(new Request(Method.GET, request
-                    .getResourceRef()));
+            response = client.handle(new Request(Method.GET, request.getResourceRef()));
             assertEquals(Status.SUCCESS_OK, response.getStatus());
             assertEquals("10220000000", response.getEntity().getText());
 
-            // Partial PUT on a file, the provided representation will be padded
-            // at the very end of the file.
-            request = new Request(Method.PUT, "http://localhost:" + TEST_PORT
-                    + "/testPut/essai.txt");
+            // Partial PUT on a file, the provided representation will be padded at the very end of the file.
+            request = new Request(Method.PUT, uriEssai);
             request.setEntity(new StringRepresentation("888"));
             request.setRanges(Arrays.asList(new Range(8, Range.SIZE_MAX)));
             response = client.handle(request);
             assertTrue(response.getStatus().isSuccess());
-            response = client.handle(new Request(Method.GET, request
-                    .getResourceRef()));
+            response = client.handle(new Request(Method.GET, request.getResourceRef()));
             assertEquals(Status.SUCCESS_OK, response.getStatus());
             assertEquals("10220000888", response.getEntity().getText());
 
-            // Partial PUT on a file that does not exist, the range does not
-            // specify the range size.
-            request = new Request(Method.PUT, "http://localhost:" + TEST_PORT
-                    + "/testPut/essai3.txt");
+            // Partial PUT on a file that does not exist, the range does not specify the range size.
+            request = new Request(Method.PUT, uriEssai3);
             request.setEntity(new StringRepresentation("888"));
             request.setRanges(Arrays.asList(new Range(8, Range.SIZE_MAX)));
             response = client.handle(request);
@@ -401,21 +382,17 @@ public class RangeTestCase extends RestletTestCase {
             assertEquals(Status.SUCCESS_PARTIAL_CONTENT, response.getStatus());
             assertEquals("888", response.getEntity().getText());
 
-            // Partial PUT on a file, the provided representation will be padded
-            // just before the end of the file.
-            request = new Request(Method.PUT, "http://localhost:" + TEST_PORT
-                    + "/testPut/essai.txt");
+            // Partial PUT on a file, the provided representation will be padded just before the end of the file.
+            request = new Request(Method.PUT, uriEssai);
             request.setEntity(new StringRepresentation("99"));
             request.setRanges(Arrays.asList(new Range(8, Range.SIZE_MAX)));
             response = client.handle(request);
             assertTrue(response.getStatus().isSuccess());
-            response = client.handle(new Request(Method.GET, request
-                    .getResourceRef()));
+            response = client.handle(new Request(Method.GET, request.getResourceRef()));
             assertEquals(Status.SUCCESS_OK, response.getStatus());
             assertEquals("10220000998", response.getEntity().getText());
 
-            request = new Request(Method.GET, "http://localhost:" + TEST_PORT
-                    + "/testPut/essai.txt");
+            request = new Request(Method.GET, uriEssai);
             request.setRanges(Arrays.asList(new Range(3, Range.SIZE_MAX)));
             response = client.handle(request);
             assertEquals(Status.SUCCESS_PARTIAL_CONTENT, response.getStatus());

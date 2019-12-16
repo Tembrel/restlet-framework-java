@@ -2,21 +2,12 @@
  * Copyright 2005-2014 Restlet
  * 
  * The contents of this file are subject to the terms of one of the following
- * open source licenses: Apache 2.0 or LGPL 3.0 or LGPL 2.1 or CDDL 1.0 or EPL
- * 1.0 (the "Licenses"). You can select the license that you prefer but you may
- * not use this file except in compliance with one of these Licenses.
+ * open source licenses: Apache 2.0 or or EPL 1.0 (the "Licenses"). You can
+ * select the license that you prefer but you may not use this file except in
+ * compliance with one of these Licenses.
  * 
  * You can obtain a copy of the Apache 2.0 license at
  * http://www.opensource.org/licenses/apache-2.0
- * 
- * You can obtain a copy of the LGPL 3.0 license at
- * http://www.opensource.org/licenses/lgpl-3.0
- * 
- * You can obtain a copy of the LGPL 2.1 license at
- * http://www.opensource.org/licenses/lgpl-2.1
- * 
- * You can obtain a copy of the CDDL 1.0 license at
- * http://www.opensource.org/licenses/cddl1
  * 
  * You can obtain a copy of the EPL 1.0 license at
  * http://www.opensource.org/licenses/eclipse-1.0
@@ -81,15 +72,41 @@ public class JacksonTestCase extends RestletTestCase {
         return invoice;
     }
 
+    public void testCbor() throws Exception {
+        Customer customer = createCustomer();
+        JacksonRepresentation<Customer> rep = new JacksonRepresentation<Customer>(
+                MediaType.APPLICATION_CBOR, customer);
+        rep = new JacksonRepresentation<Customer>(rep, Customer.class);
+        verify(customer, rep.getObject());
+    }
+
     public void testCsv() throws Exception {
         Invoice invoice = createInvoice();
         JacksonRepresentation<Invoice> rep = new JacksonRepresentation<Invoice>(
                 MediaType.TEXT_CSV, invoice);
         String text = rep.getText();
-        assertEquals("1356533333882,12456,false\n", text);
+        assertEquals("12456,1356533333882,false\n", text);
         rep = new JacksonRepresentation<Invoice>(new StringRepresentation(text,
                 rep.getMediaType()), Invoice.class);
         verify(invoice, rep.getObject());
+    }
+
+    public void testException() throws Exception {
+        Customer customer = createCustomer();
+
+        MyException me = new MyException(customer, "CUST-1234");
+
+        // Unless we are in debug mode, hide those properties
+        me.setStackTrace(new StackTraceElement[0]);
+
+        JacksonRepresentation<MyException> rep = new JacksonRepresentation<MyException>(
+                MediaType.APPLICATION_JSON, me);
+        String text = rep.getText();
+        System.out.println(text);
+
+        rep = new JacksonRepresentation<MyException>(new StringRepresentation(
+                text, rep.getMediaType()), MyException.class);
+        verify(me, rep.getObject());
     }
 
     public void testJson() throws Exception {
@@ -126,7 +143,7 @@ public class JacksonTestCase extends RestletTestCase {
                 text, rep.getMediaType()), Customer.class);
         verify(customer, rep.getObject());
     }
-    
+
     public void testXmlBomb() throws IOException {
         ClientResource cr = new ClientResource(
                 "clap://class/org/restlet/test/ext/jackson/jacksonBomb.xml");
@@ -134,13 +151,14 @@ public class JacksonTestCase extends RestletTestCase {
         xmlRep.setMediaType(MediaType.APPLICATION_XML);
         boolean error = false;
         try {
-            new JacksonRepresentation<Customer>(xmlRep, Customer.class).getObject();            
+            new JacksonRepresentation<Customer>(xmlRep, Customer.class)
+                    .getObject();
         } catch (Exception e) {
             error = true;
         }
         assertTrue(error);
     }
-
+    
     public void testYaml() throws Exception {
         Customer customer = createCustomer();
         JacksonRepresentation<Customer> rep = new JacksonRepresentation<Customer>(
@@ -174,5 +192,10 @@ public class JacksonTestCase extends RestletTestCase {
     protected void verify(Invoice invoice1, Invoice invoice2) {
         assertEquals(invoice1.getAmount(), invoice2.getAmount());
         assertEquals(invoice1.getDate(), invoice2.getDate());
+    }
+
+    protected void verify(MyException me1, MyException me2) {
+        assertEquals(me1.getErrorCode(), me2.getErrorCode());
+        verify(me1.getCustomer(), me2.getCustomer());
     }
 }
